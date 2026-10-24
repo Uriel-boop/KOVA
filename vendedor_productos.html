@@ -30,9 +30,11 @@
         .form-group { margin-bottom: 12px; }
         .form-group label { display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 4px; }
         .form-group input, .form-group textarea { width: 100%; padding: 8px; border: 1px solid var(--border-color); border-radius: 8px; }
+        
         .imagenes-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-top: 10px; }
-        .img-slot { border: 2px dashed var(--border-color); height: 80px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; text-align: center; cursor: pointer; position: relative; overflow: hidden; background-size: cover; background-position: center; }
-        .img-slot input { position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; }
+        .img-slot { border: 2px dashed var(--border-color); height: 80px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; text-align: center; cursor: pointer; position: relative; overflow: hidden; background-color: #fafafa; }
+        .img-slot input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10; }
+        .img-slot span { pointer-events: none; z-index: 1; color: #666; }
     </style>
 </head>
 <body>
@@ -86,11 +88,11 @@
                 <div class="form-group">
                     <label>Adjunta mínimo 5 imágenes</label>
                     <div class="imagenes-grid">
-                        <div class="img-slot" id="slot-1">Img 1<input type="file" name="imagen_1" accept="image/*" onchange="previewSlot(this, 1)"></div>
-                        <div class="img-slot" id="slot-2">Img 2<input type="file" name="imagen_2" accept="image/*" onchange="previewSlot(this, 2)"></div>
-                        <div class="img-slot" id="slot-3">Img 3<input type="file" name="imagen_3" accept="image/*" onchange="previewSlot(this, 3)"></div>
-                        <div class="img-slot" id="slot-4">Img 4<input type="file" name="imagen_4" accept="image/*" onchange="previewSlot(this, 4)"></div>
-                        <div class="img-slot" id="slot-5">Img 5<input type="file" name="imagen_5" accept="image/*" onchange="previewSlot(this, 5)"></div>
+                        <div class="img-slot" id="slot-1"><span>Img 1</span><input type="file" name="imagen_1" accept="image/*" onchange="previewSlot(this, 1)"></div>
+                        <div class="img-slot" id="slot-2"><span>Img 2</span><input type="file" name="imagen_2" accept="image/*" onchange="previewSlot(this, 2)"></div>
+                        <div class="img-slot" id="slot-3"><span>Img 3</span><input type="file" name="imagen_3" accept="image/*" onchange="previewSlot(this, 3)"></div>
+                        <div class="img-slot" id="slot-4"><span>Img 4</span><input type="file" name="imagen_4" accept="image/*" onchange="previewSlot(this, 4)"></div>
+                        <div class="img-slot" id="slot-5"><span>Img 5</span><input type="file" name="imagen_5" accept="image/*" onchange="previewSlot(this, 5)"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -136,11 +138,11 @@
                 <div class="form-group">
                     <label>Actualizar imágenes (Opcional)</label>
                     <div class="imagenes-grid">
-                        <div class="img-slot" id="edit-slot-1">Img 1<input type="file" name="imagen_1" accept="image/*" onchange="previewEditSlot(this, 1)"></div>
-                        <div class="img-slot" id="edit-slot-2">Img 2<input type="file" name="imagen_2" accept="image/*" onchange="previewEditSlot(this, 2)"></div>
-                        <div class="img-slot" id="edit-slot-3">Img 3<input type="file" name="imagen_3" accept="image/*" onchange="previewEditSlot(this, 3)"></div>
-                        <div class="img-slot" id="edit-slot-4">Img 4<input type="file" name="imagen_4" accept="image/*" onchange="previewEditSlot(this, 4)"></div>
-                        <div class="img-slot" id="edit-slot-5">Img 5<input type="file" name="imagen_5" accept="image/*" onchange="previewEditSlot(this, 5)"></div>
+                        <div class="img-slot" id="edit-slot-1"><span>Img 1</span><input type="file" name="imagen_1" accept="image/*" onchange="previewEditSlot(this, 1)"></div>
+                        <div class="img-slot" id="edit-slot-2"><span>Img 2</span><input type="file" name="imagen_2" accept="image/*" onchange="previewEditSlot(this, 2)"></div>
+                        <div class="img-slot" id="edit-slot-3"><span>Img 3</span><input type="file" name="imagen_3" accept="image/*" onchange="previewEditSlot(this, 3)"></div>
+                        <div class="img-slot" id="edit-slot-4"><span>Img 4</span><input type="file" name="imagen_4" accept="image/*" onchange="previewEditSlot(this, 4)"></div>
+                        <div class="img-slot" id="edit-slot-5"><span>Img 5</span><input type="file" name="imagen_5" accept="image/*" onchange="previewEditSlot(this, 5)"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -183,7 +185,8 @@
                     slot.style.backgroundImage = `url(${e.target.result})`;
                     slot.style.backgroundSize = 'cover';
                     slot.style.backgroundPosition = 'center';
-                    slot.textContent = '';
+                    let span = slot.querySelector('span');
+                    if(span) span.style.display = 'none';
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -197,7 +200,8 @@
                     slot.style.backgroundImage = `url(${e.target.result})`;
                     slot.style.backgroundSize = 'cover';
                     slot.style.backgroundPosition = 'center';
-                    slot.textContent = '';
+                    let span = slot.querySelector('span');
+                    if(span) span.style.display = 'none';
                 }
                 reader.readAsDataURL(input.files[0]);
             }
@@ -221,7 +225,8 @@
                     for(let i=1; i<=5; i++) {
                         let slot = document.getElementById(`slot-${i}`);
                         slot.style.backgroundImage = '';
-                        slot.textContent = `Img ${i}`;
+                        let span = slot.querySelector('span');
+                        if(span) span.style.display = 'block';
                     }
                     cargarMisProductos();
                 } else {
@@ -287,7 +292,8 @@
             for(let i=1; i<=5; i++) {
                 let slot = document.getElementById(`edit-slot-${i}`);
                 slot.style.backgroundImage = '';
-                slot.textContent = `Img ${i}`;
+                let span = slot.querySelector('span');
+                if(span) span.style.display = 'block';
             }
 
             document.getElementById('modal-editar').style.display = 'flex';
