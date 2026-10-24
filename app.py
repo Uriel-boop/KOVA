@@ -873,7 +873,7 @@ def subir_y_procesar_ia():
     descripcion = request.form.get('descripcion', 'Efecto generado con KOVA-IA')
 
     if file.filename == '' or not id_mascota:
-        return jsonify({'status': 'error', 'message': 'Faltan datos'}), 400
+        return jsonify({'status': 'error', 'message': 'Faltan datos o ID de mascota'}), 400
 
     filename_original = f"{int(datetime.now().timestamp())}_{secure_filename(file.filename)}"
     filepath_original = os.path.join(app.config['UPLOAD_FOLDER'], filename_original)
@@ -882,6 +882,7 @@ def subir_y_procesar_ia():
     nombre_generado = f"ia_{efecto}_{id_mascota}_{filename_original}"
     filepath_generado = os.path.join(app.config['GENERADOS_FOLDER'], nombre_generado)
     
+    # Ejecutar la transformación con Replicate IA
     ejecutar_ia_propia(filepath_original, filepath_generado, efecto)
 
     tipo = 'video' if filepath_generado.endswith(('.mp4', '.avi')) else 'imagen'
