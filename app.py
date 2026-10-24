@@ -15,72 +15,70 @@ from twilio.rest import Client
 import json
 from werkzeug.utils import secure_filename
 
-from PIL import Image, ImageOps, ImageEnhance, ImageDraw
+import replicate
+import shutil
 
 def ejecutar_ia_propia(input_path, output_path, efecto):
     """
-    Procesa la imagen subida aplicando transformaciones visuales simulando la IA
-    según el efecto seleccionado en la galería KOVA.
+    Envía la foto de la mascota y el prompt descriptivo del efecto a Replicate API
+    para generar una imagen transformada con Inteligencia Artificial generativa.
     """
     try:
-        # Abrir la imagen original de la mascota
-        img = Image.open(input_path).convert("RGBA")
-        
-        # Redimensionar a un formato estándar de 800x800 manteniendo proporción
-        img.thumbnail((800, 800), Image.Resampling.LANCZOS)
-        
-        # Crear un fondo base según el efecto
-        width, height = img.size
-        base_canvas = Image.new("RGBA", (width, height))
-        
-        efecto_lower = efecto.lower()
-        
-        if "verano" in efecto_lower or "playa" in efecto_lower:
-            # Filtro cálido de verano / playa (Tono dorado/cyan)
-            # Creamos un fondo con tinte cálido
-            overlay = Image.new("RGBA", (width, height), (255, 220, 150, 100))
-            base_canvas = Image.alpha_composite(img, overlay)
-            
-            # Marco decorativo estilo polaroid / playero
-            draw = ImageDraw.Draw(base_canvas)
-            draw.rectangle([10, 10, width-10, height-10], outline=(0, 139, 163, 220), width=6)
-            
-        elif "bambi" in efecto_lower or "kimono" in efecto_lower:
-            # Filtro oriental / elegante (Tono rosado/suave)
-            overlay = Image.new("RGBA", (width, height), (242, 84, 135, 60))
-            base_canvas = Image.alpha_composite(img, overlay)
-            
-            draw = ImageDraw.Draw(base_canvas)
-            draw.rectangle([15, 15, width-15, height-15], outline=(242, 84, 135, 255), width=8)
-            
-        elif "nocturno" in efecto_lower:
-            # Filtro nocturno con tonos azules oscuros
-            enhancer = ImageEnhance.Brightness(img)
-            img = enhancer.enhance(0.7)  # Oscurecer un poco
-            overlay = Image.new("RGBA", (width, height), (20, 30, 80, 120))
-            base_canvas = Image.alpha_composite(img, overlay)
-            
-        elif "orgullo" in efecto_lower or "tricolor" in efecto_lower:
-            # Filtro tricolor festivo
-            overlay = Image.new("RGBA", (width, height), (0, 139, 163, 70))
-            base_canvas = Image.alpha_composite(img, overlay)
-            
-        else:
-            # Efecto estándar general
-            base_canvas = img
+        # 1. Configurar tu API Token de Replicate (puedes ponerlo directamente o como variable de entorno)
+        # O mejor aún, guárdalo en os.environ['REPLICATE_API_TOKEN'] = 'tu_token_aqui'
+        if "REPLICATE_API_TOKEN" not in os.environ:
+            os.environ["REPLICATE_API_TOKEN"] = "r8_ZP8X1DqLdtPn3RZciC5s290VY710yO50b5hkO" # <--- Reemplaza aquí con tu token
 
-        # Guardar la imagen procesada resultante
-        final_img = base_canvas.convert("RGB")
-        final_img.save(output_path, "JPEG", quality=95)
-        print(f"IA aplicada exitosamente para el efecto: {efecto} en {output_path}")
-        return True
+        # 2. Diccionario de Prompts profesionales basados en tus efectos de la galería
+        prompts_efectos = {
+            "Verano Caribeño en Doña Rosa": "A cute chihuahua dog sitting on a sunny tropical beach wearing sunglasses, surrounded by colorful inflatable donuts, vibrant summer colors, masterpiece, photorealistic, highly detailed",
+            "Bambi Zen - Kimono & Abanico": "A cute chihuahua dog dressed in an elegant traditional Japanese red silk kimono, holding a traditional oriental folding fan, studio portrait, cinematic red lighting, detailed costume, masterpiece",
+            "Festival Nocturno de Carasnos": "A cute chihuahua dog at a magical night festival with glowing lanterns and festive colorful lights in the background, cinematic lighting, highly detailed digital art",
+            "Orgullo Tricolor - Camiseta México": "A cute chihuahua dog wearing a professional Mexican soccer jersey celebrating proudly, festive stadium background with confetti, vibrant colors, photorealistic"
+        }
 
-    except Exception as e:
-        print(f"Error procesando la imagen con IA: {str(e)}")
-        # Fallback de respaldo: copiar archivo original si ocurre algún error gráfico
-        import shutil
+        # Obtener el prompt descriptivo del efecto o usar uno genérico
+        prompt_texto = prompts_efectos.get(efecto, f"A cute chihuahua dog with {efecto}, high quality digital art, photorealistic")
+
+        print(f"Enviando imagen a Replicate para procesar efecto: '{efecto}'...")
+
+        # 3. Abrir la imagen en modo binario para enviarla a Replicate
+        with open(input_path, "rb") as image_file:
+            # Usaremos un modelo estable de Stable Diffusion Image-to-Image o ControlNet en Replicate
+            # Ejemplo con un modelo robusto de transformaciones visuales: stability-ai/sdxl
+            output = replicate.run(
+                "stability-ai/sdxl:39ed62f2a78f435b84fa3093e6c090674293d84b2c1ef160c2cc6d4216f9f3f2",
+                input={
+                    "prompt": prompt_texto,
+                    "image": image_file,
+                    "prompt_strength": 0.75, # Qué tanto cambia la IA la imagen (0.0 = igual, 1.0 = totalmente nuevo)
+                    "num_outputs": 1,
+                    "aspect_ratio": "1:1",
+                    "output_format": "jpg",
+                    "output_quality": 90
+                }
+            )
+
+        # 4. Replicate devuelve una URL con la imagen generada en la nube. La descargamos y guardamos localmente.
+        if output and len(output) > 0:
+            image_url = output[0]
+            response = requests.get(image_url)
+            if response.status_code == 200:
+                with open(output_path, "wb") as f:
+                    f.write(response.content)
+                print(f"¡Imagen generada por IA guardada exitosamente en {output_path}!")
+                return True
+
+        # Si por algo no devolvió salida, respaldar con copia
         shutil.copyfile(input_path, output_path)
         return False
+
+    except Exception as e:
+        print(f"Error al conectar con Replicate API: {str(e)}")
+        # Fallback de respaldo por seguridad para que la app no colapse si falla el internet o el token
+        shutil.copyfile(input_path, output_path)
+        return False
+    
 
 # 1. Crear la instancia única de Flask
 app = Flask(__name__)
