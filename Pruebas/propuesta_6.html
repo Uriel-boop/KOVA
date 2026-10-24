@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOVA - Expediente 360° (Esmeralda & Crema)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-emerald: #059669; /* Verde Esmeralda Profesional */
+            --emerald-hover: #047857;
+            --bg-cream: #F5F2EB;      /* Fondo general Crema / Beige suave */
+            --card-bg: #FFFFFF;       /* Tarjetas en blanco puro para contraste */
+            --panel-bg: #FFFFFF;      /* Panel clínico blanco */
+            --text-main: #1F2937;     /* Texto principal oscuro */
+            --gray-text: #6B7280;     /* Texto secundario gris */
+            --border-color: #E5E7EB;  /* Bordes suaves */
+            --header-dark: #111827;   /* Cabecera oscura para contraste elegante */
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-cream);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Barra superior del navegador simulada */
+        .browser-bar {
+            background-color: #E5E0D8;
+            padding: 8px 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid #D1CBC1;
+            font-size: 13px;
+            color: #4B5563;
+        }
+        .browser-controls { display: flex; gap: 6px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .dot-red { background-color: #FF5F56; }
+        .dot-yellow { background-color: #FFBD2E; }
+        .dot-green { background-color: #27C93F; }
+        .url-bar {
+            background: #FFFFFF;
+            padding: 4px 15px;
+            border-radius: 15px;
+            flex-grow: 1;
+            border: 1px solid #D1CBC1;
+            font-family: monospace;
+            color: #4B5563;
+        }
+
+        /* Header Principal */
+        header {
+            background-color: var(--header-dark);
+            color: #FFFFFF;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #374151;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-area img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            padding: 2px;
+        }
+        .logo-title {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 1px;
+            color: #FFFFFF;
+        }
+
+        .search-box {
+            background: #1F2937;
+            padding: 8px 18px;
+            border-radius: 20px;
+            width: 400px;
+            display: flex;
+            align-items: center;
+            color: #9CA3AF;
+            font-size: 13px;
+            border: 1px solid #374151;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-actions i {
+            font-size: 18px;
+            cursor: pointer;
+            color: #9CA3AF;
+        }
+
+        .btn-logout {
+            background: var(--primary-emerald);
+            color: #FFFFFF;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .btn-logout:hover { background: var(--emerald-hover); }
+
+        /* Navbar de Pestañas */
+        nav {
+            background-color: var(--header-dark);
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #374151;
+        }
+
+        nav a {
+            color: #9CA3AF;
+            text-decoration: none;
+            padding: 8px 18px;
+            font-size: 13px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+
+        nav a.active, nav a:hover {
+            color: #FFFFFF;
+            font-weight: 500;
+            border-bottom: 2px solid var(--primary-emerald);
+            border-radius: 0;
+            background: transparent;
+        }
+
+        /* Contenido Principal */
+        .main-container {
+            display: flex;
+            padding: 25px;
+            gap: 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            flex-grow: 1;
+        }
+
+        /* Sidebar Izquierdo */
+        .sidebar {
+            background: var(--card-bg);
+            color: var(--text-main);
+            width: 320px;
+            padding: 22px;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            border: 1px solid var(--border-color);
+        }
+
+        .welcome-text {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 10px;
+        }
+
+        .select-group label { font-size: 12px; color: var(--gray-text); }
+        .select-group select {
+            width: 100%;
+            padding: 9px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-top: 5px;
+            background: #F9FAFB;
+            color: var(--text-main);
+        }
+
+        .pet-card-img {
+            width: 100%;
+            height: 170px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        .pet-info-box {
+            background: #F9FAFB;
+            padding: 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            border: 1px solid var(--border-color);
+        }
+
+        .pet-info-box h3 { font-size: 18px; margin-bottom: 2px; color: var(--text-main); }
+
+        .btn-action {
+            background: var(--primary-emerald);
+            color: #FFFFFF;
+            border: none;
+            padding: 11px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+        .btn-action:hover { background: var(--emerald-hover); }
+
+        /* Panel Derecho: Historial Clínico */
+        .content-panel {
+            background: var(--panel-bg);
+            flex-grow: 1;
+            border-radius: 14px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border: 1px solid var(--border-color);
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: var(--text-main);
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 12px;
+        }
+
+        .empty-history {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 50px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            color: var(--gray-text);
+            margin-top: auto;
+            margin-bottom: auto;
+            background: #F9FAFB;
+        }
+
+        .btn-update {
+            background-color: var(--primary-emerald);
+            color: #FFFFFF;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .btn-update:hover { background: var(--emerald-hover); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 15px;
+            font-size: 11px;
+            color: var(--gray-text);
+            border-top: 1px solid #D1CBC1;
+            background: #EFECE6;
+        }
+    </style>
+</head>
+<body>
+
+
+
+    <!-- Header KOVA -->
+    <header>
+        <div class="logo-area">
+            <img src="img/LOGO_KOVA.png" alt="KOVA Logo">
+            <span class="logo-title">KOVA</span>
+        </div>
+        <div class="search-box">
+            <i class="fa fa-search"></i> &nbsp; Buscar por nombre, tutor, chip o token NFC...
+        </div>
+        <div class="user-actions">
+            <i class="fa fa-user"></i>
+            <i class="fa fa-shopping-cart"></i>
+            <button class="btn-logout">Cerrar Sesión</button>
+        </div>
+    </header>
+
+    <!-- Pestañas de navegación -->
+    <nav>
+        <a href="#" class="active">Expediente 360°</a>
+        <a href="#">Maps & Geocercas</a>
+        <a href="#">Galería de Efectos</a>
+        <a href="#">Productos y Servicios</a>
+        <a href="#">Suscripciones</a>
+    </nav>
+
+    <!-- Contenedor Principal -->
+    <div class="main-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="welcome-text">Hola, lupita, bienvenida</div>
+            
+            <div class="select-group">
+                <label>Seleccionar Canino:</label>
+                <select>
+                    <option>Toby</option>
+                </select>
+            </div>
+
+            <img src="https://images.unsplash.com/photo-1543466835-00a7907e9de1?w=400" alt="Toby" class="pet-card-img">
+
+            <div class="pet-info-box">
+                <h3>Toby</h3>
+                <span>Miel • 8.00 kg</span>
+                <hr style="border: 0.5px solid var(--border-color); margin: 6px 0;">
+                <b style="font-size: 11px; color: var(--gray-text);">TOKEN NPC:</b>
+                <span style="font-family: monospace; font-size: 11px;">NFC-SafeTouch-AC3</span>
+                <b style="font-size: 11px; color: var(--gray-text); margin-top: 4px;">CONTACTO TUTOR:</b>
+                <span style="font-size: 11px;">lupita (5620691454)</span>
+                <b style="font-size: 11px; color: var(--gray-text); margin-top: 4px;">DESCRIPCIÓN / SALUD:</b>
+                <span style="font-size: 11px;">Estable / Al día</span>
+            </div>
+
+            <button class="btn-action">Registrar Mascota</button>
+            <button class="btn-action">Editar Datos</button>
+            <button class="btn-action">Exportar Carnet Digital Criptográfico</button>
+        </aside>
+
+        <!-- Panel de Historial Clínico -->
+        <main class="content-panel">
+            <div class="panel-title">Historial Clínico</div>
+            
+            <div class="empty-history">
+                <i class="fa fa-file-medical fa-2x" style="color: var(--primary-emerald);"></i>
+                <p>No hay ningún registro de actividad médica por el momento.<br>Las actualizaciones aparecerán aquí automáticamente.</p>
+                <button class="btn-update"><i class="fa fa-sync-alt"></i> Actualizar historial clínico</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        Solución Tecnológica Desarrollada para J&M Tecnologías Innovadoras S.A. de C.V.
+    </footer>
+
+</body>
+</html>

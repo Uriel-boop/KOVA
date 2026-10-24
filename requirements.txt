@@ -1,0 +1,7 @@
+Flask
+Flask-Cors
+Flask-Mail
+google-auth
+mysql-connector-python
+requests
+twilio

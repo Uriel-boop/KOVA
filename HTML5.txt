@@ -1,0 +1,24 @@
+HTML5
+CSS3
+JavaScript (Vanilla / ES6+)
+Python 3
+Flask
+Flask-CORS
+Flask-Mail
+MySQL
+mysql-connector-python
+Google OAuth 2.0 API
+Twilio API
+html2pdf.js
+FontAwesome
+Werkzeug
+VS Code / Live Server
+XAMPP / phpMyAdmin
+OWASP ZAP
+Burp Suite
+Bandit
+Apache JMeter
+Lighthouse (Google Chrome DevTools)
+Pytest
+Flask Test Client
+Postman / Insomnia

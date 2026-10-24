@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOVA 2026 - Portal de Acceso</title>
+   
+   <style>
+            /* Ultima actualización con Paleta KOVA e Imagen de Fondo */
+            :root {
+                --primary-accent: #008BA3;       /* Azul Turquesa / Cyan */
+                --primary-accent-hover: #006b80; /* Azul Turquesa Oscuro */
+                --primary-text: #0E2A47;         /* Azul Marino / Índigo */
+                --brand-magenta: #F25487;        /* Rosa Magenta KOVA */
+                --secondary-accent: #5E5CE6;     /* Azul Lavanda / Violeta */
+                --bg-gradient: #EBF7FA;           /* Fondo Turquesa Claro */
+                --body-text: #4A5568;            /* Gris Oscuro Neutro */
+                --card-bg: #FFFFFF;              /* Blanco Puro */
+                --border-color: #E2E8F0;         /* Borde Gris Suave */
+            }
+
+            * {
+                box-sizing: border-box;
+            }
+
+            body {
+                background-image: url('img/IMG_FONDO.jpeg');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-attachment: fixed;
+                background-color: var(--bg-gradient);
+                font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+                margin: 0;
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                min-height: 100vh;
+            }
+
+            .main-wrapper {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                width: 100%;
+            }
+
+            /* Tarjeta dividida estilo KOVA - Versión Ampliada */
+            .split-card-container {
+                display: flex;
+                background-color: rgba(255, 255, 255, 0.95);
+                max-width: 1200px; /* Aumentado de 920px a 1200px para ocupar más pantalla */
+                width: 90vw;       /* Toma el 90% del ancho visible de la pantalla */
+                min-height: 580px; /* Aumenta la altura general del contenedor */
+                border-radius: 20px;
+                box-shadow: 0 15px 35px rgba(14, 42, 71, 0.15);
+                backdrop-filter: blur(8px);
+                overflow: hidden;
+                border: 1px solid rgba(255, 255, 255, 0.6);
+            }
+
+            /* Ajuste en la tarjeta principal */
+            .split-card-container {
+                height: auto !important;          /* Permite que crezca según el contenido */
+                min-height: fit-content;
+                align-items: stretch;
+            }
+
+            /* Columna del Carrusel */
+            .carousel-column {
+                flex: 1.1; /* Aumenta ligeramente la proporción visual de la imagen */
+                padding: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background-color: transparent;
+            }
+
+            /* Ajuste en el contenedor para fijar dimensiones constantes */
+            .carousel-wrapper {
+                position: relative;
+                width: 100%;
+                height: 520px; /* Se cambia min-height por height fija */
+                border-radius: 14px;
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border: 1px solid var(--border-color);
+            }
+
+            /* Regla para forzar el encuadre proporcional idéntico en todas las fotos */
+            .carousel-img {
+                position: relative;
+                z-index: 2;
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: cover !important; /* Llena el contenedor de 520px de alto sin deformarse */
+                object-position: center;     /* Centra la atención en el medio de la imagen */
+                display: block;
+                border-radius: 6px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+                transition: opacity 0.5s ease-in-out;
+            }
+
+            /* Imagen principal adaptada sin recortar (contain) */
+            .carousel-img {
+                position: relative;
+                z-index: 2;
+                max-width: 100%;
+                max-height: 100%;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+                display: block;
+                border-radius: 6px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+                transition: opacity 0.5s ease-in-out;
+            }
+
+            /* Columna de Formulario */
+            .auth-card {
+                flex: 1.2;
+                padding: 28px 32px;
+                display: flex;
+                flex-direction: column;
+                background: transparent;
+                border-radius: 0;
+                box-shadow: none;
+                border: none;
+            }
+
+            /* Centrar el contenedor del logo superior */
+            .card-header-logos {
+                display: flex;
+                justify-content: center; /* Centra horizontalmente */
+                align-items: center;    /* Centra verticalmente */
+                width: 100%;
+                margin-bottom: 15px;    /* Espacio antes de los botones de pestañas */
+                text-align: center;
+            }
+
+            /* Controlar el tamaño de la imagen */
+            .logo-kova {
+                max-width: 90px;         /* Ajusta el tamaño según tu preferencia */
+                height: auto;
+                display: block;
+                margin: 0 auto;          /* Asegura el centrado como elemento en bloque */
+            }
+
+            /* Enlace estilo texto en lugar de la imagen de JJM */
+            .jjm-link {
+                color: var(--primary-accent);
+                font-size: 0.88rem;
+                font-weight: 700;
+                text-decoration: none;
+                transition: color 0.2s ease, text-decoration 0.2s ease;
+                height: auto;
+            }
+
+            .jjm-link:hover {
+                color: var(--primary-accent-hover);
+                text-decoration: underline;
+            }
+
+            .google-btn-wrapper {
+                width: 100%;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-top: 10px;
+                padding-bottom: 20px; /* Evita que el contenedor recorte la parte inferior */
+            }
+
+            /* Forzar que el div generado por Google ocupe el 100% */
+            .google-btn-wrapper > div {
+                width: 100% !important;
+            }
+
+            /* Forzar que el iframe interno de Google abarque todo el ancho */
+            .google-btn-wrapper iframe {
+                width: 100% !important;
+                min-width: 100% !important;
+            }
+
+            .auth-card {
+                padding-bottom: 20px;
+                overflow-y: auto;     /* Permite desplazamiento si la pantalla es muy pequeña */
+            }
+
+            /* Ajuste en la columna del formulario */
+            .auth-card {
+                height: auto !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding-bottom: 30px !important;  /* Da espacio para que el botón respire abajo */
+                overflow: visible !important;     /* Evita que se recorte cualquier elemento */
+            }
+
+            /* Conmutador de Pestañas (Tabs) */
+            .auth-tabs {
+                display: flex;
+                background-color: #F0F7F9;
+                border-radius: 10px;
+                padding: 4px;
+                margin-bottom: 18px;
+                border: 1px solid rgba(0, 139, 163, 0.2);
+            }
+
+            .tab-btn {
+                flex: 1;
+                padding: 10px 16px;
+                border: none;
+                background: transparent;
+                color: var(--primary-text);
+                font-weight: 700;
+                font-size: 0.9rem;
+                border-radius: 8px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .tab-btn.active {
+                background-color: var(--primary-accent) !important;
+                color: #FFFFFF !important;
+                box-shadow: 0 2px 8px rgba(0, 139, 163, 0.3);
+            }
+
+            /* Títulos */
+            .auth-title {
+                font-size: 1.3rem;
+                font-weight: 800;
+                text-align: center;
+                color: var(--primary-text);
+                margin-bottom: 4px;
+            }
+
+            .auth-subtitle {
+                font-size: 0.85rem;
+                text-align: center;
+                color: var(--body-text);
+                margin-bottom: 18px;
+            }
+
+            /* Formulario y Controles */
+            .form-group {
+                margin-bottom: 14px;
+                text-align: left;
+            }
+
+            .form-group label {
+                display: block;
+                font-size: 0.85rem;
+                font-weight: 700;
+                color: var(--primary-text);
+                margin-bottom: 5px;
+            }
+
+            .form-group input {
+                width: 100%;
+                padding: 10px 12px;
+                border: 1.5px solid #CBD5E0;
+                border-radius: 8px;
+                background-color: #F8FAFC;
+                color: var(--primary-text);
+                font-size: 0.9rem;
+                outline: none;
+                transition: border-color 0.2s, box-shadow 0.2s;
+            }
+
+            .form-group input:focus {
+                border-color: var(--primary-accent);
+                box-shadow: 0 0 0 3px rgba(0, 139, 163, 0.15);
+                background-color: #FFFFFF;
+            }
+
+            .password-container {
+                position: relative;
+                display: flex;
+                align-items: center;
+            }
+
+            .password-container input {
+                padding-right: 38px;
+            }
+
+            .btn-toggle-eye {
+                position: absolute;
+                right: 10px;
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 0;
+                display: flex;
+                align-items: center;
+                color: var(--body-text);
+            }
+
+            /* Enlace Olvidaste tu contraseña */
+            .forgot-link-container {
+                text-align: right;
+                margin-top: -2px;
+                margin-bottom: 16px;
+            }
+
+            .forgot-link {
+                color: var(--brand-magenta);
+                font-size: 0.82rem;
+                text-decoration: none;
+                font-weight: 600;
+            }
+
+            .forgot-link:hover {
+                text-decoration: underline;
+            }
+
+            /* Botón Principal */
+            .btn-submit {
+                width: 100%;
+                padding: 11px;
+                background-color: var(--primary-accent);
+                color: #FFFFFF;
+                border: none;
+                border-radius: 8px;
+                font-weight: 700;
+                font-size: 0.9rem;
+                cursor: pointer;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                transition: background-color 0.2s, transform 0.1s;
+                box-shadow: 0 4px 10px rgba(0, 139, 163, 0.25);
+            }
+
+            .btn-submit:hover {
+                background-color: var(--primary-accent-hover);
+            }
+
+            .btn-back-login {
+                width: 100%;
+                padding: 9px;
+                margin-top: 8px;
+                background-color: #EDF2F7;
+                border: 1px solid #CBD5E0;
+                color: var(--primary-text);
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 0.85rem;
+                font-weight: 600;
+            }
+
+            /* Separador */
+            .divider {
+                display: flex;
+                align-items: center;
+                text-align: center;
+                margin: 16px 0 12px 0;
+            }
+
+            .divider::before,
+            .divider::after {
+                content: '';
+                flex: 1;
+                border-bottom: 1px solid #CBD5E0;
+            }
+
+            .divider span {
+                padding: 0 10px;
+                font-size: 0.72rem;
+                font-weight: 700;
+                color: var(--body-text);
+                letter-spacing: 0.5px;
+            }
+
+            /* Métodos Secundarios */
+            .btn-biometric {
+                width: 100%;
+                padding: 8px;
+                background-color: #FFFFFF;
+                border: 1px solid #CBD5E0;
+                border-radius: 8px;
+                font-size: 0.82rem;
+                font-weight: 600;
+                color: var(--primary-text);
+                cursor: pointer;
+                margin-bottom: 8px;
+                transition: background-color 0.2s;
+            }
+
+            .btn-biometric:hover {
+                background-color: #F7FAFC;
+            }
+
+            .google-btn-wrapper {
+                display: flex;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .google-btn-wrapper > div {
+                width: 100% !important;
+            }
+
+            footer {
+                text-align: center;
+                padding: 14px;
+                font-size: 0.75rem;
+                color: var(--primary-text);
+                background-color: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(4px);
+            }
+
+            /* Adaptación para pantallas pequeñas */
+            @media (max-width: 768px) {
+                .split-card-container {
+                    flex-direction: column;
+                }
+                .carousel-column {
+                    height: 240px;
+                }
+                .carousel-wrapper {
+                    min-height: auto;
+                }
+            }
+
+            /* Estilos para el selector de Tipo de Usuario */
+            .select-wrapper {
+                position: relative;
+                width: 100%;
+            }
+
+            .custom-select {
+                width: 100%;
+                padding: 10px 36px 10px 12px;
+                font-size: 0.95rem;
+                border: 1px solid var(--border-color, #e0e0e0);
+                border-radius: 8px;
+                background-color: var(--input-bg, #ffffff);
+                color: var(--text-color, #333333);
+                outline: none;
+                appearance: none; /* Remueve la flecha por defecto del navegador */
+                -webkit-appearance: none;
+                -moz-appearance: none;
+                cursor: pointer;
+                transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            }
+
+            /* Flecha personalizada al estilo KOVA */
+            .select-wrapper::after {
+                content: "";
+                position: absolute;
+                right: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 0;
+                height: 0;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid var(--primary-accent, #008BA3);
+                pointer-events: none;
+            }
+
+            .custom-select:focus {
+                border-color: var(--primary-accent, #008BA3);
+                box-shadow: 0 0 0 3px rgba(0, 139, 163, 0.15);
+            }
+
+            .custom-select option {
+                background-color: #ffffff;
+                color: #333333;
+                padding: 10px;
+            }
+    </style>
+</head>
+    ¬<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+        <div class="main-wrapper">
+            <!-- Contenedor Principal Dividido en 2 Columnas (Layout Imagen 1) -->
+            <div class="split-card-container">
+
+                <!-- COLUMNA IZQUIERDA: Carrusel de Fotos -->
+                <div class="carousel-column">
+                    <div class="carousel-wrapper">
+                        <!-- Fondo difuminado dinámico -->
+                        <div id="carousel-bg" class="carousel-bg" style="background-image: url('img/IMG_01.jpeg');"></div>
+                        
+                        <!-- Imagen principal completa -->
+                        <img id="carousel-slide" src="img/IMG_01.jpeg" alt="Mascota KOVA" class="carousel-img">
+                    </div>
+                </div>
+
+                <!-- COLUMNA DERECHA: Tarjeta de Autenticación -->
+                <div class="auth-card">
+                    
+                    <!-- Logos Superiores (JJM Link y KOVA) -->
+                    <div class="card-header-logos">
+                        <img src="img/LOGO_KOVA.png" alt="Logo KOVA" class="logo-kova">
+                    </div>
+
+                    <!-- Conmutador Iniciar Sesión / Registro -->
+                    <div class="auth-tabs">
+                        <button id="tab-login" class="tab-btn active" onclick="switchTab('login')">Iniciar Sesión</button>
+                        <button id="tab-register" class="tab-btn" onclick="switchTab('register')">Crear Cuenta</button>
+                    </div>
+
+                    <!-- Formulario 1: Iniciar Sesión -->
+                    <form id="form-login" onsubmit="iniciarSesion(event)">
+                        <div class="auth-title">¡BIENVENIDO!</div>
+                        <div class="auth-subtitle">Inicia sesión para acceder a tu cuenta</div>
+
+                        <div class="form-group">
+                            <label for="login-correo">Correo Electrónico</label>
+                            <input type="email" id="login-correo" required placeholder="usuario@gmail.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="login-contrasena">Contraseña</label>
+                            <div class="password-container">
+                                <input type="password" id="login-contrasena" required placeholder="••••••">
+                                <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('login-contrasena', this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="forgot-link-container">
+                            <a href="#" onclick="mostrarFormulario('forgot')" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                        </div>
+                        
+                        <button type="submit" class="btn-submit">ENTRAR A KOVA</button>
+                    </form>
+
+                    <!-- Formulario 2: Registro de Usuario -->
+                    <form id="form-register" style="display: none;" onsubmit="registrarUsuario(event)">
+                        <div class="auth-title">Crear Cuenta</div>
+                        <div class="auth-subtitle">Regístrate para vincular tu placa NFC KOVA</div>
+
+                        <div class="form-group">
+                            <label for="reg-nombre">Nombre Completo</label>
+                            <input type="text" id="reg-nombre" required placeholder="Ingresa tu nombre completo">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-correo">Correo Electrónico</label>
+                            <input type="email" id="reg-correo" required placeholder="usuario@ejemplo.com">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-telefono">Teléfono de Contacto</label>
+                            <input type="tel" id="reg-telefono" required placeholder="55 5555 5555">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reg-contrasena">Contraseña</label>
+                            <div class="password-container">
+                                <input type="password" id="reg-contrasena" required placeholder="••••••••">
+                                <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('reg-contrasena', this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Campo Tipo de usuario agregado -->
+                        <div class="form-group">
+                            <label for="reg-tipo-usuario">Tipo de usuario</label>
+                            <div class="select-wrapper">
+                                <select id="reg-tipo-usuario" required class="custom-select">
+                                    <option value="" disabled selected hidden>Selecciona una opción</option>
+                                    <option value="Titular de mascota">Titular de mascota</option>
+                                    <option value="Vendedor de Productos">Vendedor de Productos</option>
+                                    <option value="Prestador de servicios">Prestador de servicios</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">REGISTRARME E INICIAR</button>
+                    </form>
+
+                    <!-- Formulario 3: Solicitar Código de Recuperación -->
+                    <form id="form-forgot-password" style="display: none;" onsubmit="solicitarCodigo(event)">
+                        <div class="auth-title">Recuperar Contraseña</div>
+                        <div class="auth-subtitle">Ingresa tu correo para recibir un código de verificación</div>
+
+                        <div class="form-group">
+                            <label for="forgot-correo">Correo Electrónico</label>
+                            <input type="email" id="forgot-correo" required placeholder="usuario@ejemplo.com">
+                        </div>
+
+                        <button type="submit" class="btn-submit">ENVIAR CÓDIGO</button>
+                        <button type="button" class="btn-back-login" onclick="mostrarFormulario('login')">Volver al Inicio de Sesión</button>
+                    </form>
+
+                    <!-- Formulario 4: Ingresar Código y Nueva Contraseña -->
+                    <form id="form-reset-password" style="display: none;" onsubmit="cambiarContrasena(event)">
+                        <div class="auth-title">Restablecer Contraseña</div>
+                        <div class="auth-subtitle">Ingresa el código enviado a tu correo y tu nueva contraseña</div>
+
+                        <div class="form-group">
+                            <label for="reset-codigo">Código de Verificación (6 dígitos)</label>
+                            <input type="text" id="reset-codigo" maxlength="6" required placeholder="123456">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="reset-contrasena">Nueva Contraseña</label>
+                            <div class="password-container">
+                                <input type="password" id="reset-contrasena" required placeholder="••••••••">
+                                <button type="button" class="btn-toggle-eye" onclick="togglePasswordVisibility('reset-contrasena', this)">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-submit">CAMBIAR CONTRASEÑA</button>
+                    </form>
+
+                    <!-- Sección de Métodos Rápidos de Acceso Directo -->
+                    <div class="divider"><span>O ENTRAR CON</span></div>
+
+                    <!-- Botón de Huella / Reconocimiento Facial 
+                    <button type="button" class="btn-biometric">
+                        Usar Huella / Reconocimiento Facial
+                    </button>
+                    -->
+
+                    <!-- Botón de Google Sign-In -->
+                    <div class="google-btn-wrapper">
+                        <div id="g_id_onload"
+                            data-client_id="144324961012-sv6ggpbi9gn0sc3f6jap6n9ckkfhcc5q.apps.googleusercontent.com"
+                            data-callback="handleGoogleLogin">
+                        </div>
+                        <div class="g_id_signin" 
+                            data-type="standard" 
+                            data-shape="rectangular" 
+                            data-theme="outline" 
+                            data-text="signin_with" 
+                            data-size="large" 
+                            data-logo_alignment="left">
+                        </div>
+                    </div>
+                    
+
+                </div>
+            </div>
+        </div>
+
+<!-- Footer Institucional -->
+<footer>
+    • Solución Tecnologic Desarrollada pora   <a href="https://www.jjmti.com.mx" target="_blank" rel="noopener noreferrer" >   JJM Tecnologías Innovadoras, S.A. de C.V.  </a>  •
+</footer>
+    <script>
+    let correoRecuperacion = "";
+    const API_URL = "http://127.0.0.1:5000";
+
+    function mostrarFormulario(tipo) {
+        document.getElementById('form-login').style.display = tipo === 'login' ? 'block' : 'none';
+        document.getElementById('form-register').style.display = tipo === 'register' ? 'block' : 'none';
+        document.getElementById('form-forgot-password').style.display = tipo === 'forgot' ? 'block' : 'none';
+        document.getElementById('form-reset-password').style.display = tipo === 'reset' ? 'block' : 'none';
+    }
+
+    async function solicitarCodigo(event) {
+        event.preventDefault();
+        correoRecuperacion = document.getElementById('forgot-correo').value;
+
+        try {
+            const res = await fetch(`${API_URL}/api/request-reset-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ correo_electronico: correoRecuperacion })
+            });
+
+            const data = await res.json();
+            alert(data.message);
+
+            if (data.success) {
+                mostrarFormulario('reset');
+            }
+        } catch (error) {
+            console.error("Error en la petición:", error);
+            alert("Error al conectar con el servidor Flask.");
+        }
+    }
+
+    async function cambiarContrasena(event) {
+        event.preventDefault();
+        const codigo = document.getElementById('reset-codigo').value;
+        const nueva_contrasena = document.getElementById('reset-contrasena').value;
+
+        try {
+            const res = await fetch(`${API_URL}/api/verify-reset-code`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    correo_electronico: correoRecuperacion,
+                    codigo: codigo,
+                    nueva_contrasena: nueva_contrasena
+                })
+            });
+
+            const data = await res.json();
+            alert(data.message);
+
+            if (data.success) {
+                document.getElementById('reset-codigo').value = '';
+                document.getElementById('reset-contrasena').value = '';
+                document.getElementById('forgot-correo').value = '';
+                
+                mostrarFormulario('login');
+            }
+        } catch (error) {
+            console.error("Error al cambiar contraseña:", error);
+            alert("Error al intentar cambiar la contraseña.");
+        }
+    }
+
+    // Cambiar entre pestañas Iniciar Sesión y Registro con actualización de color
+    function switchTab(tab) {
+        const btnLogin = document.getElementById('tab-login');
+        const btnRegister = document.getElementById('tab-register');
+        const formLogin = document.getElementById('form-login');
+        const formRegister = document.getElementById('form-register');
+
+        if (tab === 'login') {
+            btnLogin.classList.add('active');
+            btnRegister.classList.remove('active');
+            formLogin.style.display = 'block';
+            formRegister.style.display = 'none';
+        } else if (tab === 'register') {
+            btnRegister.classList.add('active');
+            btnLogin.classList.remove('active');
+            formRegister.style.display = 'block';
+            formLogin.style.display = 'none';
+        }
+    }
+
+    // Iniciar Sesión con redirección dinámica según el tipo de usuario
+    // Iniciar sesión con detección dinámica de rol
+    // Iniciar sesión con detección robusta de rol
+    async function iniciarSesion(e) {
+        if (e) e.preventDefault();
+
+        const correoInput = document.getElementById('login-correo');
+        const contrasenaInput = document.getElementById('login-contrasena');
+
+        if (!correoInput || !contrasenaInput) return;
+
+        const correo = correoInput.value.trim();
+        const contrasena = contrasenaInput.value.trim();
+
+        try {
+            const res = await fetch(`${API_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    correo_electronico: correo,
+                    contrasena: contrasena
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && (data.success || data.status === 'success')) {
+                // Guardar los datos del usuario logueado en LocalStorage
+                localStorage.setItem('kova_current_user', JSON.stringify(data.user));
+                
+                // Obtener el tipo de usuario y pasarlo a minúsculas para evitar errores de mayúsculas/minúsculas
+                const tipoUsuario = (data.tipo_usuario || (data.user && data.user.tipo_usuario) || '').toLowerCase();
+
+                // Redireccionar si el rol incluye la palabra 'vendedor'
+                if (tipoUsuario.includes('vendedor')) {
+                    window.location.href = 'vendedor_productos.html';
+                } else {
+                    window.location.href = 'kova_usuarios.html';
+                }
+            } else {
+                alert('❌ ' + (data.message || 'Correo o contraseña incorrectos'));
+            }
+        } catch (error) {
+            console.error('Error al iniciar sesión:', error);
+            alert('❌ Error de conexión con el servidor Flask.');
+        }
+    }
+
+    // Registro de Usuario Manual con redirección basada en su rol elegido
+    async function registrarUsuario(e) {
+        e.preventDefault();
+        const payload = {
+            nombre_completo: document.getElementById('reg-nombre').value,
+            correo_electronico: document.getElementById('reg-correo').value,
+            telefono: document.getElementById('reg-telefono').value,
+            contrasena: document.getElementById('reg-contrasena').value,
+            tipo_usuario: document.getElementById('reg-tipo-usuario').value
+        };
+
+        try {
+            const res = await fetch(`${API_URL}/api/register`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if (res.ok && (data.status === 'success' || data.success)) {
+                alert('¡Cuenta creada exitosamente! Iniciando sesión...');
+                
+                // Iniciar sesión automático tras registro
+                const resLogin = await fetch(`${API_URL}/api/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        correo_electronico: payload.correo_electronico,
+                        contrasena: payload.contrasena
+                    })
+                });
+                const dataLogin = await resLogin.json();
+                
+                if (resLogin.ok && (dataLogin.status === 'success' || dataLogin.success)) {
+                    localStorage.setItem('kova_current_user', JSON.stringify(dataLogin.user));
+                    
+                    // Redirigir según el rol seleccionado al registrarse
+                    const tipoUsuario = dataLogin.tipo_usuario || payload.tipo_usuario;
+                    if (tipoUsuario === 'Vendedor de productos') {
+                        window.location.href = 'vendedor_productos.html';
+                    } else {
+                        window.location.href = 'kova_usuarios.html';
+                    }
+                } else {
+                    alert(dataLogin.message || 'Registro completado, pero ocurrió un problema al iniciar sesión automáticamente.');
+                }
+            } else {
+                alert(data.message || 'Error al registrar el usuario.');
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Error de conexión con el servidor Python.');
+        }
+    }
+
+    // Verificar si el dispositivo soporta biometría integrada
+    async function esBiometriaDisponible() {
+        if (window.PublicKeyCredential && 
+            await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()) {
+            return true;
+        }
+        return false;
+    }
+
+    const btnBiometrico = document.getElementById('btnBiometrico');
+    if (btnBiometrico) {
+        btnBiometrico.addEventListener('click', iniciarSesionBiometrico);
+    }
+
+    function togglePasswordVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+
+        const isPassword = input.type === 'password';
+        input.type = isPassword ? 'text' : 'password';
+
+        if (btn) {
+            btn.innerHTML = isPassword 
+                ? `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`
+                : `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+        }
+    }
+
+    // Carrusel de Fotos
+    const imagenesCarrusel = [
+        'img/IMG_01.jpeg', 'img/IMG_02.jpeg', 'img/IMG_03.jpeg', 'img/IMG_04.jpeg',
+        'img/IMG_05.jpeg', 'img/IMG_06.jpeg', 'img/IMG_07.jpeg', 'img/IMG_08.jpeg',
+        'img/IMG_09.jpeg', 'img/IMG_10.jpeg', 'img/IMG_11.jpeg'
+    ];
+
+    let indiceActual = 0;
+
+    setInterval(() => {
+        const imgElement = document.getElementById('carousel-slide');
+        if (imgElement && imagenesCarrusel.length > 1) {
+            indiceActual = (indiceActual + 1) % imagenesCarrusel.length;
+            imgElement.style.opacity = 0;
+            setTimeout(() => {
+                imgElement.src = imagenesCarrusel[indiceActual];
+                imgElement.style.opacity = 1;
+            }, 300);
+        }
+    }, 4000);
+</script>
+</body>
+</html>

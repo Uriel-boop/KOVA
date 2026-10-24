@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOVA - Catálogo y Suscripciones (Fondo de Patitas)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-red: #A81D2A;
+            --red-hover: #8D1722;
+            --bg-light: #F4F5F7;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --gray-text: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            /* Fondo gris claro general con un patrón repetido y sutil de patitas de perro */
+            background-color: #EFECE6;
+            background-image: 
+                radial-gradient(circle, rgba(168, 29, 42, 0.05) 15px, transparent 16px),
+                radial-gradient(circle, rgba(0, 0, 0, 0.03) 8px, transparent 9px);
+            background-size: 80px 80px;
+            background-position: 0 0, 40px 40px;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+            padding: 30px 0;
+        }
+
+        /* Contenedor de cada vista/tarjeta estilo mockup */
+        .mockup-container {
+            background: var(--card-bg);
+            max-width: 1350px;
+            margin: 0 auto;
+            border-radius: 16px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.12);
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            width: 95%;
+        }
+
+        /* Header Principal */
+        header {
+            background-color: #FFFFFF;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-area img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            padding: 2px;
+        }
+        .badge-title {
+            background-color: var(--primary-red);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .search-box {
+            background: #F9FAFB;
+            padding: 8px 18px;
+            border-radius: 20px;
+            width: 420px;
+            display: flex;
+            align-items: center;
+            color: var(--gray-text);
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .cart-icon-container {
+            position: relative;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-main);
+        }
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background-color: var(--primary-red);
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: var(--primary-red);
+            border: 1px solid var(--primary-red);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: var(--primary-red);
+            color: white;
+        }
+
+        /* Navbar de Pestañas */
+        nav {
+            background-color: #EAECEF;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        nav a {
+            color: #4B5563;
+            text-decoration: none;
+            padding: 8px 22px;
+            font-size: 13px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        nav a.active {
+            background-color: var(--primary-red);
+            color: white;
+            font-weight: 600;
+        }
+
+        nav a:hover:not(.active) {
+            background-color: #DDE1E6;
+        }
+
+        /* Contenido de Sección */
+        .section-content {
+            padding: 30px 40px;
+        }
+
+        .section-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .section-subtitle {
+            font-size: 13px;
+            color: var(--gray-text);
+            margin-bottom: 20px;
+        }
+
+        /* Sub-filtros (Servicios / Productos) */
+        .sub-filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 25px;
+            align-items: center;
+        }
+        .sub-filter-btn {
+            padding: 6px 18px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            background: #FFFFFF;
+            color: var(--gray-text);
+        }
+        .sub-filter-btn.active {
+            background: var(--primary-red);
+            color: white;
+            border-color: var(--primary-red);
+        }
+
+        /* Grid de Productos */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .product-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+        }
+
+        .product-img-placeholder {
+            background: #E5E7EB;
+            height: 130px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-text);
+            font-size: 24px;
+            position: relative;
+        }
+        .product-img-placeholder::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            width: 12px;
+            height: 12px;
+            background-color: var(--primary-red);
+            border-radius: 50%;
+        }
+
+        .product-tag {
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--primary-red);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .product-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+
+        .product-desc {
+            font-size: 11px;
+            color: var(--gray-text);
+            line-height: 1.4;
+        }
+
+        .product-price {
+            font-size: 15px;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-top: auto;
+        }
+
+        .btn-add-cart {
+            background-color: var(--primary-red);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: background 0.2s;
+        }
+        .btn-add-cart:hover {
+            background-color: var(--red-hover);
+        }
+
+        /* Sección de Suscripciones */
+        .subscription-status {
+            background-color: #1F2937;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .plan-card {
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: relative;
+        }
+
+        .plan-card.highlighted {
+            border: 2px solid var(--primary-red);
+            box-shadow: 0 10px 25px rgba(168, 29, 42, 0.1);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary-red);
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 4px 14px;
+            border-radius: 12px;
+            letter-spacing: 0.5px;
+        }
+
+        .plan-header {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .plan-title {
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--primary-red);
+        }
+        .plan-price {
+            font-size: 26px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+        .plan-price span {
+            font-size: 12px;
+            font-weight: normal;
+            color: var(--gray-text);
+        }
+
+        .plan-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            font-size: 12px;
+            color: var(--gray-text);
+            margin: 10px 0;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.4;
+        }
+        .plan-features li i {
+            color: var(--primary-red);
+            margin-top: 2px;
+        }
+
+        .btn-subscribe {
+            background-color: #1F2937;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .plan-card.highlighted .btn-subscribe {
+            background-color: var(--primary-red);
+        }
+        .btn-subscribe:hover {
+            opacity: 0.9;
+        }
+
+        @media(max-width: 900px) {
+            .plans-grid { grid-template-columns: 1fr; }
+            .search-box { width: 200px; }
+        }
+    </style>
+</head>
+<body>
+
+
+
+    <!-- MOCKUP VISTA 2: SUSCRIPCIONES -->
+    <div class="mockup-container">
+        <header>
+            <div class="logo-area">
+                <img src="img/LOGO_KOVA.png" alt="KOVA Logo">
+                <span class="badge-title" style="background-color: #1F2937;">SUSCRIPCIONES</span>
+            </div>
+            <div class="search-box">
+                <i class="fa fa-search"></i> &nbsp; Buscar por nombre, tutor, chip, o token NFC (rotatorio)...
+            </div>
+            <div class="user-actions">
+                <div class="cart-icon-container">
+                    <i class="fa fa-shopping-cart"></i>
+                    <span class="cart-badge">0</span>
+                </div>
+                <button class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <nav>
+            <a href="#">Expediente 360°</a>
+            <a href="#">Mapa & Geocercas</a>
+            <a href="#">Galería de Efectos</a>
+            <a href="#">Productos y Servicios</a>
+            <a href="#" class="active"><i class="fa fa-paw"></i> Suscripciones</a>
+        </nav>
+
+        <div class="section-content">
+            <div class="section-title">Planes de Suscripción KOVA</div>
+            <div class="section-subtitle">Selecciona el plan que mejor se adapte a las necesidades de tus mascotas y veterinaria.</div>
+
+            <div class="subscription-status">
+                <i class="fa fa-shield-alt"></i> Estado de tu Suscripción: Plan Gratuito / Sin Suscripción Activa
+            </div>
+
+            <div class="plans-grid">
+                <!-- Plan Individual -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <div class="plan-title"><i class="fa fa-paw"></i> Plan Individual</div>
+                        <div class="plan-price">$80 <span>MXN / mes</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fa fa-check"></i> Permite registrar de 1 a 3 mascotas.</li>
+                        <li><i class="fa fa-check"></i> Permite descargar el expediente clínico.</li>
+                        <li><i class="fa fa-check"></i> Genera 3 imágenes gratuitas en Galería de Efectos.</li>
+                        <li><i class="fa fa-check"></i> Rastreo limitado a las 3 mascotas registradas.</li>
+                    </ul>
+                    <button class="btn-subscribe">Suscribirme</button>
+                </div>
+
+                <!-- Plan Familiar (Destacado) -->
+                <div class="plan-card highlighted">
+                    <div class="popular-badge">MÁS POPULAR</div>
+                    <div class="plan-header">
+                        <div class="plan-title"><i class="fa fa-paw"></i> Plan Familiar</div>
+                        <div class="plan-price">$120 <span>MXN / mes</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fa fa-check"></i> Permite registrar de 4 a 7 mascotas.</li>
+                        <li><i class="fa fa-check"></i> Permite descargar el expediente clínico.</li>
+                        <li><i class="fa fa-check"></i> Genera 6 imágenes gratuitas en Galería de Efectos.</li>
+                        <li><i class="fa fa-check"></i> Rastreo limitado a las 7 mascotas registradas.</li>
+                        <li><i class="fa fa-check"></i> Permite compartir información con su veterinario (permiso para 1 persona adicional con costo extra para consultar y agregar datos).</li>
+                    </ul>
+                    <button class="btn-subscribe">Suscribirme</button>
+                </div>
+
+                <!-- Plan Premier -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <div class="plan-title"><i class="fa fa-paw"></i> Plan Premier</div>
+                        <div class="plan-price">$300 <span>MXN / mes</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fa fa-check"></i> Permite registrar de 10 a 30 mascotas.</li>
+                        <li><i class="fa fa-check"></i> Permite descargar el expediente clínico.</li>
+                        <li><i class="fa fa-check"></i> Imágenes ilimitadas en Galería de Efectos por periodo de suscripción.</li>
+                        <li><i class="fa fa-check"></i> Rastreo para todas las mascotas registradas.</li>
+                        <li><i class="fa fa-check"></i> Permite compartir información con su veterinario (permiso para 1 persona adicional sin costo para consultar y agregar datos).</li>
+                    </ul>
+                    <button class="btn-subscribe">Suscribirme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

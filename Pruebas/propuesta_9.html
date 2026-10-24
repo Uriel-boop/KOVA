@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KOVA - Planes de Suscripción</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-navy: #1B2A4A;
+            --navy-hover: #121D33;
+            --accent-blue: #2563EB;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --gray-text: #6B7280;
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            /* Fondo azul oscuro con patrón de patitas sutil */
+            background-color: #0F172A;
+            background-image: 
+                radial-gradient(circle, rgba(37, 99, 235, 0.08) 15px, transparent 16px),
+                radial-gradient(circle, rgba(255, 255, 255, 0.03) 8px, transparent 9px);
+            background-size: 80px 80px;
+            background-position: 0 0, 40px 40px;
+            color: #FFFFFF;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 30px 10px;
+        }
+
+        .mockup-container {
+            background: #1E293B;
+            max-width: 1300px;
+            width: 100%;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Header Principal */
+        header {
+            background-color: #F8FAFC;
+            color: var(--text-main);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .logo-area img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            padding: 2px;
+        }
+        .badge-title {
+            background-color: #E2E8F0;
+            color: #1E293B;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+
+        .user-actions {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .cart-icon-container {
+            position: relative;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-main);
+        }
+        .cart-badge {
+            position: absolute;
+            top: -8px;
+            right: -10px;
+            background-color: #EF4444;
+            color: white;
+            font-size: 10px;
+            padding: 2px 5px;
+            border-radius: 50%;
+            font-weight: bold;
+        }
+
+        .btn-logout {
+            background: transparent;
+            color: var(--text-main);
+            border: 1px solid #CBD5E1;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: #E2E8F0;
+        }
+
+        /* Navbar de Pestañas en Azul Marino */
+        nav {
+            background-color: #111827;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        nav a {
+            color: #94A3B8;
+            text-decoration: none;
+            padding: 8px 24px;
+            font-size: 13px;
+            border-radius: 20px;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        nav a.active {
+            background-color: #3B82F6;
+            color: white;
+            font-weight: 600;
+        }
+
+        nav a:hover:not(.active) {
+            background-color: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        /* Contenido de Suscripciones */
+        .section-content {
+            padding: 35px 45px;
+        }
+
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFFFFF;
+            margin-bottom: 6px;
+        }
+
+        .section-subtitle {
+            font-size: 13px;
+            color: #94A3B8;
+            margin-bottom: 25px;
+        }
+
+        /* Estado de Suscripción */
+        .subscription-status {
+            background-color: #065F46;
+            color: #ECFDF5;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Grid de Planes */
+        .plans-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+        }
+
+        .plan-card {
+            background: #FFFFFF;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 30px 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        .plan-card.highlighted {
+            border: 2px solid #3B82F6;
+            box-shadow: 0 15px 35px rgba(59, 130, 246, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .popular-badge {
+            position: absolute;
+            top: -14px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #3B82F6;
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 5px 16px;
+            border-radius: 14px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .plan-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .plan-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+        .plan-price {
+            font-size: 30px;
+            font-weight: bold;
+            color: var(--text-main);
+        }
+        .plan-price span {
+            font-size: 13px;
+            font-weight: normal;
+            color: var(--gray-text);
+        }
+
+        .plan-features {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 12px;
+            color: var(--gray-text);
+            margin: 5px 0;
+            flex-grow: 1;
+        }
+
+        .plan-features li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.4;
+        }
+        .plan-features li i {
+            color: #10B981;
+            margin-top: 2px;
+            font-size: 13px;
+        }
+
+        .btn-subscribe {
+            background-color: #1E3A8A;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .plan-card.highlighted .btn-subscribe {
+            background-color: #2563EB;
+        }
+        .btn-subscribe:hover {
+            opacity: 0.9;
+        }
+
+        @media(max-width: 900px) {
+            .plans-grid { grid-template-columns: 1fr; }
+        }
+
+        body {
+    /* Fondo gris elegante de base */
+    background-color: #2D333B; 
+    
+    /* Patrón de huellas de perro repetido usando SVG en Base64/URI */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 24 24' fill='%233A424D'%3E%3Cpath d='M12 11c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-5 1c-.83 0-1.5.67-1.5 1.5S6.17 15 7 15s1.5-.67 1.5-1.5S7.83 12 7 12zm10 0c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm-8-5c-.94 0-1.75.54-2.14 1.33-.24.49-.69 1.17-1.36 1.17-.83 0-1.5.67-1.5 1.5 0 .55.3 1.03.75 1.3-.43.43-.75 1.04-.75 1.7 0 1.1.9 2 2 2 .55 0 1.05-.22 1.41-.59C8.36 15.69 9.1 16 10 16s1.64-.31 2.18-.88c.36.37.86.59 1.41.59 1.1 0 2-.9 2-2 0-.66-.32-1.27-.75-1.7.45-.27.75-.75.75-1.3 0-.83-.67-1.5-1.5-1.5-.67 0-1.12.68-1.36 1.17C13.75 7.54 12.94 7 12 7zm6 3c-.83 0-1.5.67-1.5 1.5S17.17 13 18 13s1.5-.67 1.5-1.5S18.83 10 18 10zm-12 0c-.83 0-1.5.67-1.5 1.5S5.17 13 6 13s1.5-.67 1.5-1.5S6.83 10 6 10z'/%3E%3C/svg%3E");
+    
+    /* Tamaño y espaciado del patrón de huellas */
+    background-size: 90px 90px;
+    background-repeat: repeat;
+}
+    </style>
+</head>
+<body>
+
+    <div class="mockup-container">
+        <!-- Header -->
+        <header>
+            <div class="logo-area">
+                <img src="img/LOGO_KOVA.png" alt="KOVA Logo">
+                <span class="badge-title">SUSCRIPCIONES</span>
+            </div>
+            <div class="user-actions">
+                <div class="cart-icon-container">
+                    <i class="fa fa-shopping-cart"></i>
+                    <span class="cart-badge">0</span>
+                </div>
+                <button class="btn-logout">Cerrar Sesión</button>
+            </div>
+        </header>
+
+        <!-- Navbar -->
+        <nav>
+            <a href="#">Expediente 360°</a>
+            <a href="#">Mapa & Geocercas</a>
+            <a href="#">Galería de Efectos</a>
+            <a href="#" class="active">Suscripciones</a>
+        </nav>
+
+        <!-- Contenido -->
+        <div class="section-content">
+            <div class="section-title">Planes de Suscripción KOVA</div>
+            <div class="section-subtitle">Seleccione el plan que mejor se adapte a las necesidades de las mascotas y veterinaria.</div>
+
+            <div class="subscription-status">
+                <i class="fa fa-shield-alt"></i> Estado de tu Suscripción: Plan Gratuito / Sin Suscripción Activa
+            </div>
+
+            <div class="plans-grid">
+                <!-- Plan Individual -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <div class="plan-title">Plan Individual</div>
+                        <div class="plan-price">$80 <span>MXN / mes</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fa fa-check"></i> Permite registrar de 1 a 3 mascotas.</li>
+                        <li><i class="fa fa-check"></i> Permite descargar el expediente clínico.</li>
+                        <li><i class="fa fa-check"></i> Genera 3 imágenes gratuitas en Galería de Efectos.</li>
+                        <li><i class="fa fa-check"></i> Rastreo limitado a las 3 mascotas registradas.</li>
+                    </ul>
+                    <button class="btn-subscribe">Suscribirme</button>
+                </div>
+
+                <!-- Plan Familiar (Destacado) -->
+                <div class="plan-card highlighted">
+                    <div class="popular-badge">MÁS POPULAR</div>
+                    <div class="plan-header">
+                        <div class="plan-title">Plan Familiar</div>
+                        <div class="plan-price">$120 <span>MXN / mes</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fa fa-check"></i> Permite registrar de 4 a 7 mascotas.</li>
+                        <li><i class="fa fa-check"></i> Permite descargar el expediente clínico.</li>
+                        <li><i class="fa fa-check"></i> Genera 6 imágenes gratuitas en Galería de Efectos.</li>
+                        <li><i class="fa fa-check"></i> Rastreo limitado a las 7 mascotas registradas.</li>
+                        <li><i class="fa fa-check"></i> Permite compartir información con su veterinario (permiso para 1 persona adicional con costo extra para consultar y agregar datos).</li>
+                    </ul>
+                    <button class="btn-subscribe">Suscribirme</button>
+                </div>
+
+                <!-- Plan Premier -->
+                <div class="plan-card">
+                    <div class="plan-header">
+                        <div class="plan-title">Plan Premier</div>
+                        <div class="plan-price">$300 <span>MXN / mes</span></div>
+                    </div>
+                    <ul class="plan-features">
+                        <li><i class="fa fa-check"></i> Permite registrar de 10 a 30 mascotas.</li>
+                        <li><i class="fa fa-check"></i> Permite descargar el expediente clínico.</li>
+                        <li><i class="fa fa-check"></i> Imágenes ilimitadas en Galería de Efectos por periodo de suscripción.</li>
+                        <li><i class="fa fa-check"></i> Rastreo para todas las mascotas registradas.</li>
+                        <li><i class="fa fa-check"></i> Permite compartir información con su veterinario (permiso para 1 persona adicional sin costo para consultar y agregar datos).</li>
+                    </ul>
+                    <button class="btn-subscribe">Suscribirme</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
