@@ -28,6 +28,7 @@ def ejecutar_ia_propia(input_path, output_path, efecto):
         # O mejor aún, guárdalo en os.environ['REPLICATE_API_TOKEN'] = 'tu_token_aqui'
         if "REPLICATE_API_TOKEN" not in os.environ:
             os.environ["REPLICATE_API_TOKEN"] = "r8_ZP8X1DqLdtPn3RZciC5s290VY710yO50b5hkO" # <--- Reemplaza aquí con tu token
+            
 
         # 2. Diccionario de Prompts profesionales basados en tus efectos de la galería
         prompts_efectos = {
