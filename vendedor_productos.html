@@ -266,7 +266,10 @@
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Proveedor:</strong> ${p.nombre_proveedor || 'N/A'} (${p.contacto_proveedor || 'Sin contacto'})</div>
                                 <div style="display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;">
                                     ${imgsHtml !== '' ? imgsHtml : '<span style="font-size:0.75rem; color:#999;">Sin imágenes adjuntas</span>'}
-                                    <button onclick="abrirEditar(${p.id_producto})" style="margin-left:auto; background:var(--primary-accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-pen"></i> Editar</button>
+                                    <div style="margin-left:auto; display:flex; gap:8px;">
+                                        <button onclick="abrirEditar(${p.id_producto})" style="background:var(--primary-accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-pen"></i> Editar</button>
+                                        <button onclick="eliminarProducto(${p.id_producto})" style="background:#e74c3c; color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-trash"></i> Eliminar</button>
+                                    </div>
                                 </div>
                             </div>
                         `;
@@ -318,6 +321,23 @@
                     alert("Error: " + data.message);
                 }
             });
+        }
+
+        function eliminarProducto(idProducto) {
+            if(confirm("¿Estás seguro de que deseas eliminar este producto?")) {
+                fetch(`http://127.0.0.1:5000/api/eliminar_producto/${idProducto}`, {
+                    method: 'DELETE'
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.status === 'success') {
+                        alert("Producto eliminado exitosamente.");
+                        cargarMisProductos();
+                    } else {
+                        alert("Error al eliminar: " + data.message);
+                    }
+                });
+            }
         }
 
         function cerrarSesion() {

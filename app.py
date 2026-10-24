@@ -878,6 +878,23 @@ def actualizar_foto_perfil_ia():
 
     return jsonify({'status': 'success', 'message': 'Foto de perfil actualizada'}), 200
 
+# --- 4. ELIMINAR PRODUCTO ---
+@app.route('/api/eliminar_producto/<int:id_producto>', methods=['DELETE', 'OPTIONS'])
+def eliminar_producto(id_producto):
+    if request.method == 'OPTIONS':
+        return '', 200
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM productos_vendedor WHERE id_producto = %s", (id_producto,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "success", "message": "Producto eliminado correctamente"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
