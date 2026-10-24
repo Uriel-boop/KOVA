@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 import os
 import random
 import re
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, render_template, send_from_directory
 from flask_cors import CORS
 from flask_mail import Mail, Message
 from google.auth.transport import requests as google_requests
@@ -13,27 +13,13 @@ import mysql.connector
 import requests
 from twilio.rest import Client
 import json
-
-
-import os
-import mysql.connector
-from flask import Flask, request, jsonify, render_template
-from flask_mail import Mail, Message
-from flask_cors import CORS
 from werkzeug.utils import secure_filename
-
-
-import os
-from werkzeug.utils import secure_filename
-from flask import Flask, render_template, request, jsonify, send_from_directory
 
 # 1. Crear la instancia única de Flask
 app = Flask(__name__)
 
-# 2. Configuración global de CORS para TODAS las rutas (incluyendo /actualizar_historial)
+# 2. Configuración global de CORS para TODAS las rutas
 CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)
-
-# ... A partir de aquí continúa tu configuración de BD (DB_CONFIG) y Mail ...
 
 GOOGLE_CLIENT_ID = (
     "144324961012-sv6ggpbi9gn0sc3f6jap6n9ckkfhcc5q.apps.googleusercontent.com"
@@ -69,9 +55,19 @@ app.config["MAIL_CHARSET"] = "utf-8"
 
 mail = Mail(app)
 
+# --- Configuración de Carpetas de Carga ---
+UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'uploads')
+GENERADOS_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static', 'generados')
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(GENERADOS_FOLDER, exist_ok=True)
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['GENERADOS_FOLDER'] = GENERADOS_FOLDER
+
 
 # -------------------------------------------------------------------
-# ENDPOINTS
+# ENDPOINTS DE AUTENTICACIÓN Y USUARIOS
 # -------------------------------------------------------------------
 
 @app.route("/api/google_login", methods=["POST", "OPTIONS"])
@@ -84,12 +80,8 @@ def google_login():
         token = data.get("credential")
 
         if not token:
-            return (
-                jsonify({"success": False, "message": "Token no proporcionado."}),
-                400,
-            )
+            return jsonify({"success": False, "message": "Token no proporcionado."}), 400
 
-        # Verificar token con Google
         idinfo = id_token.verify_oauth2_token(
             token, google_requests.Request(), GOOGLE_CLIENT_ID
         )
@@ -100,43 +92,33 @@ def google_login():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Buscar usuario en BD
-        cursor.execute(
-            "SELECT * FROM usuarios WHERE correo_electronico = %s", (email,)
-        )
+        cursor.execute("SELECT * FROM usuarios WHERE correo_electronico = %s", (email,))
         usuario = cursor.fetchone()
 
         if not usuario:
-            # Crear usuario si no existe
             cursor.execute(
                 "INSERT INTO usuarios (nombre_completo, correo_electronico) VALUES (%s, %s)",
                 (nombre, email),
             )
             conn.commit()
-            cursor.execute(
-                "SELECT * FROM usuarios WHERE correo_electronico = %s", (email,)
-            )
+            cursor.execute("SELECT * FROM usuarios WHERE correo_electronico = %s", (email,))
             usuario = cursor.fetchone()
 
         cursor.close()
         conn.close()
 
-        return (
-            jsonify({
-                "success": True,
-                "message": "Inicio de sesión con Google exitoso.",
-                "redirect": "kova_usuarios.html",
-                "user": usuario,
-            }),
-            200,
-        )
+        return jsonify({
+            "success": True,
+            "message": "Inicio de sesión con Google exitoso.",
+            "redirect": "kova_usuarios.html",
+            "user": usuario,
+        }), 200
 
     except Exception as e:
         print("Error en google_login:", e)
         return jsonify({"success": False, "message": str(e)}), 500
 
 
-# Endpoint: Registro de usuario
 @app.route('/api/register', methods=['POST', 'OPTIONS'])
 def register():
     if request.method == 'OPTIONS':
@@ -159,7 +141,6 @@ def register():
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Verificar si el correo ya existe usando id_usuario
         cursor.execute("SELECT id_usuario FROM usuarios WHERE correo_electronico = %s", (correo,))
         if cursor.fetchone():
             cursor.close()
@@ -169,7 +150,6 @@ def register():
                 "message": "El correo electrónico ya está registrado."
             }), 400
 
-        # Insertar nuevo usuario respetando id_usuario y tipo_usuario
         query = """
             INSERT INTO usuarios (nombre_completo, correo_electronico, telefono, contrasena, tipo_usuario)
             VALUES (%s, %s, %s, %s, %s)
@@ -177,10 +157,8 @@ def register():
         cursor.execute(query, (nombre, correo, telefono, contrasena, tipo_usuario))
         conn.commit()
         
-        # Obtener el ID recién creado mediante lastrowid
         nuevo_id = cursor.lastrowid
 
-        # Recuperar el objeto usuario completo usando id_usuario
         cursor.execute("SELECT id_usuario, nombre_completo, correo_electronico, telefono, tipo_usuario FROM usuarios WHERE id_usuario = %s", (nuevo_id,))
         usuario = cursor.fetchone()
 
@@ -202,7 +180,6 @@ def register():
         }), 500
     
 
-# --- ENDPOINT: INICIAR SESIÓN ---
 @app.route('/api/login', methods=['POST', 'OPTIONS'])
 def login():
     if request.method == 'OPTIONS':
@@ -234,9 +211,7 @@ def login():
         conn.close()
 
         if usuario:
-            # Obtenemos el tipo de usuario registrado (por defecto Titular si viene nulo)
             tipo_usuario = usuario.get('tipo_usuario', 'Titular de mascota').strip()
-            
             return jsonify({
                 "success": True,
                 "message": f"¡Bienvenido de nuevo, {usuario['nombre_completo']}!",
@@ -257,7 +232,10 @@ def login():
         }), 500
 
 
-# 3. ENDPOINT: Registrar Mascota (Original)
+# -------------------------------------------------------------------
+# ENDPOINTS DE MASCOTAS E HISTORIAL
+# -------------------------------------------------------------------
+
 @app.route('/api/registrar_mascota', methods=['POST', 'OPTIONS'])
 def registrar_mascota():
     if request.method == 'OPTIONS':
@@ -269,7 +247,7 @@ def registrar_mascota():
         usuario_id = data.get('usuario_id')
         nombre_mascota = data.get('nombre_mascota')
         fecha_nacimiento = data.get('fecha_nacimiento') or None
-        raza = data.get('raza', '') # Capturar raza
+        raza = data.get('raza', '')
         color = data.get('color')
         peso_kg = data.get('peso_kg') or None
         imagen = data.get('imagen', '')
@@ -309,33 +287,17 @@ def registrar_mascota():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# 4. ENDPOINT: Obtener Mascotas del Usuario (Original)
-# --- ENDPOINT: Obtener Mascotas del Usuario ---
 @app.route('/api/mascotas/<int:usuario_id>', methods=['GET'])
 def obtener_mascotas_usuario(usuario_id):
     try:
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Consulta SQL corregida usando id_usuario y fecha_nacimiento
         query = """
             SELECT 
-                id_mascota,
-                id_usuario,
-                nombre_mascota,
-                fecha_nacimiento,
-                color,
-                peso_kg,
-                imagen,
-                token_nfc,
-                nom_tutor,
-                tel_cont_1,
-                tel_cont_2,
-                tel_cont_3,
-                tel_cont_4,
-                tel_cont_5,
-                descripcion,
-                fecha_registro
+                id_mascota, id_usuario, nombre_mascota, fecha_nacimiento, color,
+                peso_kg, imagen, token_nfc, nom_tutor, tel_cont_1, tel_cont_2,
+                tel_cont_3, tel_cont_4, tel_cont_5, descripcion, fecha_registro
             FROM registro_mascota 
             WHERE id_usuario = %s
             ORDER BY id_mascota DESC
@@ -346,7 +308,6 @@ def obtener_mascotas_usuario(usuario_id):
         cursor.close()
         conn.close()
 
-        # Convertir fechas a string para evitar errores de serialización JSON
         for m in mascotas:
             for k, v in m.items():
                 if hasattr(v, 'isoformat'):
@@ -359,8 +320,6 @@ def obtener_mascotas_usuario(usuario_id):
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-# 5. ENDPOINT: Editar Datos de Mascota (Original)
-# 5. ENDPOINT: Editar Datos de Mascota
 @app.route("/api/editar_mascota/<int:mascota_id>", methods=["POST", "PUT", "OPTIONS"])
 def editar_mascota(mascota_id):
     if request.method == "OPTIONS":
@@ -392,51 +351,14 @@ def editar_mascota(mascota_id):
                 SET nombre_mascota=%s, fecha_nacimiento=%s, color=%s, peso_kg=%s, imagen=%s, token_nfc=%s, nom_tutor=%s, tel_cont_1=%s, tel_cont_2=%s, tel_cont_3=%s, tel_cont_4=%s, tel_cont_5=%s, descripcion=%s, raza=%s
                 WHERE id_mascota=%s
             """
-            cursor.execute(
-                query,
-                (
-                    nombre_mascota,
-                    fecha_nacimiento,
-                    color,
-                    peso_kg,
-                    imagen,
-                    token_nfc,
-                    nom_tutor,
-                    tel_cont_1,
-                    tel_cont_2,
-                    tel_cont_3,
-                    tel_cont_4,
-                    tel_cont_5,
-                    descripcion,
-                    mascota_id,
-                    raza,
-                ),
-            )
+            cursor.execute(query, (nombre_mascota, fecha_nacimiento, color, peso_kg, imagen, token_nfc, nom_tutor, tel_cont_1, tel_cont_2, tel_cont_3, tel_cont_4, tel_cont_5, descripcion, raza, mascota_id))
         else:
             query = """
                 UPDATE registro_mascota
-                SET nombre_mascota=%s, fecha_nacimiento=%s, color=%s, peso_kg=%s, token_nfc=%s, nom_tutor=%s, tel_cont_1=%s, tel_cont_2=%s, tel_cont_3=%s, tel_cont_4=%s, tel_cont_5=%s, descripcion=%s, raza=%s, 
+                SET nombre_mascota=%s, fecha_nacimiento=%s, color=%s, peso_kg=%s, token_nfc=%s, nom_tutor=%s, tel_cont_1=%s, tel_cont_2=%s, tel_cont_3=%s, tel_cont_4=%s, tel_cont_5=%s, descripcion=%s, raza=%s
                 WHERE id_mascota=%s
             """
-            cursor.execute(
-                query,
-                (
-                    nombre_mascota,
-                    fecha_nacimiento,
-                    color,
-                    peso_kg,
-                    token_nfc,
-                    nom_tutor,
-                    tel_cont_1,
-                    tel_cont_2,
-                    tel_cont_3,
-                    tel_cont_4,
-                    tel_cont_5,
-                    descripcion,
-                    mascota_id,
-                    raza,
-                ),
-            )
+            cursor.execute(query, (nombre_mascota, fecha_nacimiento, color, peso_kg, token_nfc, nom_tutor, tel_cont_1, tel_cont_2, tel_cont_3, tel_cont_4, tel_cont_5, descripcion, raza, mascota_id))
 
         conn.commit()
         cursor.close()
@@ -452,79 +374,142 @@ def editar_mascota(mascota_id):
         return jsonify({"status": "error", "message": str(err)}), 400
 
 
-# ENDPOINT: Completar Perfil
-@app.route("/api/completar_perfil", methods=["POST", "OPTIONS"])
-def completar_perfil():
-    if request.method == "OPTIONS":
-        return "", 200
+# -------------------------------------------------------------------
+# ENDPOINTS DE PRODUCTOS Y VENDEDOR (ACTUALIZADOS CON NOMBRES ÚNICOS)
+# -------------------------------------------------------------------
 
+@app.route('/api/registrar_producto', methods=['POST'])
+def registrar_producto():
+    try:
+        id_vendedor = request.form.get('id_vendedor')
+        nombre = request.form.get('nombre_producto')
+        descripcion = request.form.get('descripcion')
+        precio = request.form.get('precio')
+        cantidad = request.form.get('cantidad')
+        nombre_proveedor = request.form.get('nombre_proveedor')
+        contacto_proveedor = request.form.get('contacto_proveedor')
+
+        imgs = []
+        for i in range(1, 6):
+            file = request.files.get(f'imagen_{i}')
+            if file and file.filename != '':
+                # Nombre único con timestamp para evitar colisiones
+                filename = f"{int(datetime.now().timestamp())}_{secure_filename(file.filename)}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                imgs.append(filename)
+            else:
+                imgs.append(None)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO productos_vendedor 
+            (id_vendedor, nombre_producto, descripcion, precio, cantidad, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, nombre_proveedor, contacto_proveedor)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            id_vendedor, nombre, descripcion, precio, cantidad, 
+            imgs[0], imgs[1], imgs[2], imgs[3], imgs[4], 
+            nombre_proveedor, contacto_proveedor
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"status": "success", "message": "Producto registrado correctamente"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/productos', methods=['GET'])
+def obtener_productos():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM productos_vendedor ORDER BY fecha_registro DESC")
+        productos = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "success", "productos": productos}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+
+@app.route('/api/comprar_producto', methods=['POST'])
+def comprar_producto():
     try:
         data = request.get_json() or {}
-        correo = data.get("correo_electronico")
-        telefono = str(data.get("telefono", "")).strip()
-        contrasena = str(data.get("contrasena", "")).strip()
+        id_producto = data.get('id_producto')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT cantidad FROM productos_vendedor WHERE id_producto = %s", (id_producto,))
+        prod = cursor.fetchone()
+        
+        if not prod:
+            return jsonify({"status": "error", "message": "Producto no encontrado"}), 404
+            
+        stock_actual = int(prod['cantidad'])
+        if stock_actual > 0:
+            nuevo_stock = stock_actual - 1
+            cursor.execute("UPDATE productos_vendedor SET cantidad = %s WHERE id_producto = %s", (nuevo_stock, id_producto))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status": "success", "message": "Compra realizada con éxito", "stock_restante": nuevo_stock}), 200
+        else:
+            cursor.close()
+            conn.close()
+            return jsonify({"status": "error", "message": "Producto agotado"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
 
-        if not correo:
-            return (
-                jsonify({"success": False, "message": "Correo no especificado."}),
-                400,
-            )
 
-        # Validar 10 dígitos
-        if not re.match(r"^\d{10}$", telefono):
-            return (
-                jsonify({
-                    "success": False,
-                    "message": (
-                        "El teléfono debe ser de exactamente 10 dígitos numéricos."
-                    ),
-                }),
-                400,
-            )
-
-        # Validar contraseña alfanumérica
-        if (
-            len(contrasena) < 8
-            or not re.search(r"[A-Za-z]", contrasena)
-            or not re.search(r"\d", contrasena)
-        ):
-            return (
-                jsonify({
-                    "success": False,
-                    "message": (
-                        "La contraseña debe tener mínimo 8 caracteres e incluir"
-                        " letras y números."
-                    ),
-                }),
-                400,
-            )
+@app.route('/api/actualizar_producto/<int:id_producto>', methods=['POST'])
+def actualizar_producto(id_producto):
+    try:
+        nombre = request.form.get('nombre_producto')
+        descripcion = request.form.get('descripcion')
+        precio = request.form.get('precio')
+        cantidad = request.form.get('cantidad')
+        nombre_proveedor = request.form.get('nombre_proveedor')
+        contacto_proveedor = request.form.get('contacto_proveedor')
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute(
-            "UPDATE usuarios SET telefono = %s, contrasena = %s WHERE correo_electronico = %s",
-            (telefono, contrasena, correo),
-        )
-        conn.commit()
+        # Actualizar campos de texto básicos mediante id_producto exacto
+        query = """
+            UPDATE productos_vendedor 
+            SET nombre_producto = %s, descripcion = %s, precio = %s, cantidad = %s, nombre_proveedor = %s, contacto_proveedor = %s
+            WHERE id_producto = %s
+        """
+        cursor.execute(query, (nombre, descripcion, precio, cantidad, nombre_proveedor, contacto_proveedor, id_producto))
 
+        # Actualizar imágenes solo si se adjuntaron nuevas
+        for i in range(1, 6):
+            file = request.files.get(f'imagen_{i}')
+            if file and file.filename != '':
+                filename = f"{int(datetime.now().timestamp())}_{secure_filename(file.filename)}"
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                
+                cursor.execute(f"UPDATE productos_vendedor SET imagen_{i} = %s WHERE id_producto = %s", (filename, id_producto))
+
+        conn.commit()
         cursor.close()
         conn.close()
 
-        return (
-            jsonify(
-                {"success": True, "message": "Datos actualizados correctamente."}
-            ),
-            200,
-        )
-
+        return jsonify({"status": "success", "message": "Producto actualizado correctamente"}), 200
     except Exception as e:
-        print("Error en completar_perfil:", e)
-        return jsonify({"success": False, "message": str(e)}), 500
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 
+# -------------------------------------------------------------------
+# OTROS ENDPOINTS (RECUPERACIÓN, HISTORIAL, ALERTAS, IA)
+# -------------------------------------------------------------------
 
-# Endpoint: Solicitar código de recuperación
 @app.route("/api/request-reset-code", methods=["POST", "OPTIONS"])
 def request_reset_code():
     if request.method == "OPTIONS":
@@ -535,36 +520,22 @@ def request_reset_code():
         correo_electronico = data.get("correo_electronico")
 
         if not correo_electronico:
-            return (
-                jsonify({"success": False, "message": "El correo es requerido"}),
-                400,
-            )
+            return jsonify({"success": False, "message": "El correo es requerido"}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
 
-        # Verificar si el correo existe
-        cursor.execute(
-            "SELECT correo_electronico FROM usuarios WHERE correo_electronico = %s",
-            (correo_electronico,),
-        )
+        cursor.execute("SELECT correo_electronico FROM usuarios WHERE correo_electronico = %s", (correo_electronico,))
         usuario = cursor.fetchone()
 
         if not usuario:
             cursor.close()
             conn.close()
-            return (
-                jsonify(
-                    {"success": False, "message": "El correo no esta registrado"}
-                ),
-                404,
-            )
+            return jsonify({"success": False, "message": "El correo no esta registrado"}), 404
 
-        # Generar código OTP de 6 dígitos y expiración a 15 minutos
         code = str(random.randint(100000, 999999))
         expires_at = datetime.now() + timedelta(minutes=15)
 
-        # Guardar código en la BD
         cursor.execute(
             """
                 UPDATE usuarios
@@ -574,40 +545,24 @@ def request_reset_code():
             (code, expires_at, correo_electronico),
         )
         conn.commit()
-
         cursor.close()
         conn.close()
 
         msg = Message()
         msg.subject = "Codigo de Verificacion KOVA"
         msg.recipients = [correo_electronico]
-        msg.body = (
-            "Hola,\n\nTu codigo de verificacion para restablecer tu contrasena en"
-            f" KOVA es: {code}\n\nEste codigo expira en 15 minutos."
-        )
+        msg.body = f"Hola,\n\nTu codigo de verificacion para restablecer tu contrasena en KOVA es: {code}\n\nEste codigo expira en 15 minutos."
         msg.charset = "utf-8"
 
         mail.send(msg)
 
-        return (
-            jsonify(
-                {"success": True, "message": "Codigo enviado exitosamente al correo"}
-            ),
-            200,
-        )
+        return jsonify({"success": True, "message": "Codigo enviado exitosamente al correo"}), 200
 
     except Exception as e:
         mensaje_error = str(e).encode("ascii", errors="ignore").decode("utf-8")
-        return (
-            jsonify({
-                "success": False,
-                "message": f"Error en el servidor: {mensaje_error}",
-            }),
-            500,
-        )
+        return jsonify({"success": False, "message": f"Error en el servidor: {mensaje_error}"}), 500
 
 
-# Endpoint: Verificar código y actualizar contraseña
 @app.route("/api/verify-reset-code", methods=["POST", "OPTIONS"])
 def verify_reset_code():
     if request.method == "OPTIONS":
@@ -620,12 +575,7 @@ def verify_reset_code():
         nueva_contrasena = data.get("nueva_contrasena")
 
         if not all([correo_electronico, codigo, nueva_contrasena]):
-            return (
-                jsonify(
-                    {"success": False, "message": "Todos los campos son obligatorios"}
-                ),
-                400,
-            )
+            return jsonify({"success": False, "message": "Todos los campos son obligatorios"}), 400
 
         conn = get_db_connection()
         cursor = conn.cursor(dictionary=True)
@@ -643,27 +593,13 @@ def verify_reset_code():
         if not usuario or usuario["reset_code"] != codigo:
             cursor.close()
             conn.close()
-            return (
-                jsonify({
-                    "success": False,
-                    "message": "Codigo de verificacion incorrecto",
-                }),
-                400,
-            )
+            return jsonify({"success": False, "message": "Codigo de verificacion incorrecto"}), 400
 
-        # Validar si el código ha expirado
         if datetime.now() > usuario["reset_code_expires"]:
             cursor.close()
             conn.close()
-            return (
-                jsonify({
-                    "success": False,
-                    "message": "El codigo ha expirado. Solicita uno nuevo",
-                }),
-                400,
-            )
+            return jsonify({"success": False, "message": "El codigo ha expirado. Solicita uno nuevo"}), 400
 
-        # Actualizar la contraseña en la base de datos y limpiar el código
         cursor.execute(
             """
                 UPDATE usuarios
@@ -673,36 +609,19 @@ def verify_reset_code():
             (nueva_contrasena, correo_electronico),
         )
         conn.commit()
-
         cursor.close()
         conn.close()
 
-        return (
-            jsonify(
-                {"success": True, "message": "Contrasena actualizada correctamente"}
-            ),
-            200,
-        )
+        return jsonify({"success": True, "message": "Contrasena actualizada correctamente"}), 200
 
     except Exception as e:
         mensaje_error = str(e).encode("ascii", errors="ignore").decode("utf-8")
-        return (
-            jsonify({
-                "success": False,
-                "message": f"Error en el servidor: {mensaje_error}",
-            }),
-            500,
-        )
+        return jsonify({"success": False, "message": f"Error en el servidor: {mensaje_error}"}), 500
+
 
 @app.route('/')
 def index():
-        return render_template('index.html')
-
-# Asegurarte de definir la carpeta donde se guardarán las imágenes subidas
-UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), 'static', 'uploads')
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
+    return render_template('index.html')
 
 
 @app.route('/actualizar_historial', methods=['POST', 'OPTIONS'])
@@ -716,7 +635,6 @@ def actualizar_historial():
 
         id_mascota = request.form.get('id_mascota', 1)
         
-        # Respaldar datos base de la mascota
         cursor.execute("SELECT * FROM registro_mascota WHERE id_mascota = %s", (id_mascota,))
         pet_data = cursor.fetchone()
 
@@ -733,17 +651,12 @@ def actualizar_historial():
         telefono_1 = request.form.get('telefono_1') or (pet_data[10] if pet_data else '')
         telefono_2 = request.form.get('telefono_2') or (pet_data[11] if pet_data else '')
         
-        # ===================================================================
-        # AQUÍ VAN EXACTAMENTE EL CORREO Y LA DIRECCIÓN DEL TUTOR
-        # ===================================================================
         email_tutor = request.form.get('email_tutor', '')
         direccion_tutor = request.form.get('direccion', '')
-        # ===================================================================
 
         actividad_medica = request.form.get('actividad_medica', '')
         subopcion_medica = request.form.get('subopcion_medica', '')
 
-        # Empaquetar todos los demás datos del formulario dinámico en un diccionario y pasarlo a JSON
         form_data_dict = {key: value for key, value in request.form.items() 
                           if key not in ['id_mascota', 'nombre_mascota', 'sexo', 'fecha_nacimiento', 
                                          'peso', 'raza', 'color', 'esterilizado', 'senas_particulares', 
@@ -751,16 +664,13 @@ def actualizar_historial():
                                          'direccion', 'actividad_medica', 'subopcion_medica']}
         
         detalles_json = json.dumps(form_data_dict)
-
-        # Fecha y hora exacta del sistema
         consulta_fecha = datetime.now()
 
-        # Procesar archivos adjuntos o imágenes
         consulta_imagen_nombre = None
         if 'consulta_imagen' in request.files:
             file = request.files['consulta_imagen']
             if file and file.filename != '':
-                filename = secure_filename(file.filename)
+                filename = f"{int(datetime.now().timestamp())}_{secure_filename(file.filename)}"
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
                 consulta_imagen_nombre = filename
@@ -796,7 +706,8 @@ def actualizar_historial():
     except Exception as e:
         print("Error en /actualizar_historial:", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
-    
+
+
 @app.route('/obtener_historial/<int:id_mascota>', methods=['GET'])
 def obtener_historial(id_mascota):
     try:
@@ -821,7 +732,6 @@ def obtener_historial(id_mascota):
         cursor.close()
         conn.close()
 
-        # 1. Respaldar fecha de nacimiento y 2. Convertir fechas a string (isoformat) para JSON
         for r in registros:
             if not r.get('fecha_nacimiento') and r.get('fecha_nac_registrada'):
                 r['fecha_nacimiento'] = r['fecha_nac_registrada']
@@ -835,6 +745,7 @@ def obtener_historial(id_mascota):
     except Exception as e:
         print("Error en /obtener_historial:", str(e))
         return jsonify({"status": "error", "message": str(e)}), 500
+
 
 @app.route('/api/enviar_alerta_geocerca', methods=['POST', 'OPTIONS'])
 def enviar_alerta_geocerca():
@@ -851,7 +762,6 @@ def enviar_alerta_geocerca():
         fecha = data.get('fecha', '')
         hora = data.get('hora', '')
 
-        # Construir el mensaje de alerta formal
         msg = Message()
         msg.subject = f"🚨 URGENTE: Alerta de Geocerca - {nombre_mascota} fuera de perímetro"
         msg.recipients = [email_tutor]
@@ -881,26 +791,11 @@ def enviar_alerta_geocerca():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-app.config['GENERADOS_FOLDER'] = 'static/generados' # Carpeta para guardar resultados de IA
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
-os.makedirs(app.config['GENERADOS_FOLDER'], exist_ok=True)
-
-# --- FUNCIÓN DE IA (A REEMPLAZAR POR TU ALGORITMO) ---
 def ejecutar_ia_propia(input_path, output_path, efecto):
-    """
-    AQUÍ DEBE IR TU CÓDIGO DE IA PROPIO.
-    Utiliza librerías como OpenCV, TensorFlow, PyTorch o modelos de generación de video.
-    El input_path es la imagen subida, output_path donde guardas el resultado.
-    """
-    # Ejemplo simulado (esto NO es IA, solo copia la imagen):
     import shutil
     shutil.copyfile(input_path, output_path) 
-    print(f"Simulando IA para efecto: {efecto} en {output_path}")
-    # SI TU IA GENERA VIDEOS, LA EXTENSIÓN DE output_path debe ser .mp4
     return True 
 
-# --- ENDPOINTS DE LA GALERÍA ---
 
 @app.route('/api/subir_y_procesar_ia', methods=['POST'])
 def subir_y_procesar_ia():
@@ -910,16 +805,16 @@ def subir_y_procesar_ia():
     file = request.files['imagen']
     id_mascota = request.form.get('id_mascota')
     efecto = request.form.get('efecto', 'filtro_generico')
-    descripcion = request.form.get('descripcion', 'Efecto generado con KOVA-IA') # <--- Capturar descripción
+    descripcion = request.form.get('descripcion', 'Efecto generado con KOVA-IA')
 
     if file.filename == '' or not id_mascota:
         return jsonify({'status': 'error', 'message': 'Faltan datos'}), 400
 
-    filename_original = secure_filename(file.filename)
+    filename_original = f"{int(datetime.now().timestamp())}_{secure_filename(file.filename)}"
     filepath_original = os.path.join(app.config['UPLOAD_FOLDER'], filename_original)
     file.save(filepath_original)
 
-    nombre_generado = f"ia_{efecto}_{id_mascota}_{os.path.splitext(filename_original)[0]}.png"
+    nombre_generado = f"ia_{efecto}_{id_mascota}_{filename_original}"
     filepath_generado = os.path.join(app.config['GENERADOS_FOLDER'], nombre_generado)
     
     ejecutar_ia_propia(filepath_original, filepath_generado, efecto)
@@ -932,7 +827,6 @@ def subir_y_procesar_ia():
         INSERT INTO galeria_ia (id_mascota, tipo_archivo, nombre_archivo, titulo_efecto, descripcion_efecto)
         VALUES (%s, %s, %s, %s, %s)
     """
-    # Guardar también la descripción en la base de datos
     cursor.execute(query, (id_mascota, tipo, nombre_generado, efecto, descripcion))
     conn.commit()
     cursor.close()
@@ -945,6 +839,7 @@ def subir_y_procesar_ia():
         'tipo': tipo
     }), 200
 
+
 @app.route('/api/galeria/<int:id_mascota>')
 def obtener_galeria(id_mascota):
     conn = get_db_connection()
@@ -956,28 +851,21 @@ def obtener_galeria(id_mascota):
     conn.close()
     return jsonify({'status': 'success', 'galeria': galeria}), 200
 
-@app.route('/api/eliminar_archivo_galeria/<int:id_galeria>', methods=['DELETE'])
-def eliminar_archivo(id_galeria):
-    # Lógica para obtener el nombre del archivo, borrarlo del disco y de BD.
-    # ... (implementar)
-    pass
 
 @app.route('/static/generados/<filename>')
 def servir_generados(filename):
     return send_from_directory(app.config['GENERADOS_FOLDER'], filename)
 
-# --- ACTUALIZAR FOTO DE PERFIL ---
-# Endpoint existente, pero debe manejar archivos de la carpeta 'static/generados/'
+
 @app.route('/api/actualizar_foto_perfil_ia', methods=['POST'])
 def actualizar_foto_perfil_ia():
     data = request.get_json()
     id_mascota = data.get('id_mascota')
-    nombre_archivo = data.get('nombre_archivo') # Nombre del archivo en 'static/generados/'
+    nombre_archivo = data.get('nombre_archivo')
 
     if not id_mascota or not nombre_archivo:
         return jsonify({'status': 'error', 'message': 'Datos incompletos'}), 400
 
-    # El path de la nueva foto de perfil es: static/generados/<nombre_archivo>
     nueva_ruta_imagen = f"static/generados/{nombre_archivo}"
 
     conn = get_db_connection()
@@ -991,133 +879,5 @@ def actualizar_foto_perfil_ia():
     return jsonify({'status': 'success', 'message': 'Foto de perfil actualizada'}), 200
 
 
-# --- 1. REGISTRAR PRODUCTO ---
-@app.route('/api/registrar_producto', methods=['POST'])
-def registrar_producto():
-    try:
-        id_vendedor = request.form.get('id_vendedor')
-        nombre = request.form.get('nombre_producto')
-        descripcion = request.form.get('descripcion')
-        precio = request.form.get('precio')
-        cantidad = request.form.get('cantidad')
-        nombre_proveedor = request.form.get('nombre_proveedor')
-        contacto_proveedor = request.form.get('contacto_proveedor')
-
-        imgs = []
-        for i in range(1, 6):
-            file = request.files.get(f'imagen_{i}')
-            if file and file.filename != '':
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                imgs.append(filename)
-            else:
-                imgs.append(None)
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-        query = """
-            INSERT INTO productos_vendedor 
-            (id_vendedor, nombre_producto, descripcion, precio, cantidad, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, nombre_proveedor, contacto_proveedor)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-        """
-        cursor.execute(query, (
-            id_vendedor, nombre, descripcion, precio, cantidad, 
-            imgs[0], imgs[1], imgs[2], imgs[3], imgs[4], 
-            nombre_proveedor, contacto_proveedor
-        ))
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return jsonify({"status": "success", "message": "Producto registrado correctamente"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# --- 2. OBTENER PRODUCTOS ---
-@app.route('/api/productos', methods=['GET'])
-def obtener_productos():
-    try:
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT * FROM productos_vendedor ORDER BY fecha_registro DESC")
-        productos = cursor.fetchall()
-        cursor.close()
-        conn.close()
-        return jsonify({"status": "success", "productos": productos}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-# --- 3. ACTUALIZAR O COMPRAR PRODUCTO (DESCONTAR STOCK) ---
-@app.route('/api/comprar_producto', methods=['POST'])
-def comprar_producto():
-    try:
-        data = request.get_json() or {}
-        id_producto = data.get('id_producto')
-        
-        conn = get_db_connection()
-        cursor = conn.cursor(dictionary=True)
-        cursor.execute("SELECT cantidad FROM productos_vendedor WHERE id_producto = %s", (id_producto,))
-        prod = cursor.fetchone()
-        
-        if not prod:
-            return jsonify({"status": "error", "message": "Producto no encontrado"}), 404
-            
-        stock_actual = int(prod['cantidad'])
-        if stock_actual > 0:
-            nuevo_stock = stock_actual - 1
-            cursor.execute("UPDATE productos_vendedor SET cantidad = %s WHERE id_producto = %s", (nuevo_stock, id_producto))
-            conn.commit()
-            cursor.close()
-            conn.close()
-            return jsonify({"status": "success", "message": "Compra realizada con éxito", "stock_restante": nuevo_stock}), 200
-        else:
-            cursor.close()
-            conn.close()
-            return jsonify({"status": "error", "message": "Producto agotado"}), 400
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-@app.route('/api/actualizar_producto/<int:id_producto>', methods=['POST'])
-def actualizar_producto(id_producto):
-    try:
-        nombre = request.form.get('nombre_producto')
-        descripcion = request.form.get('descripcion')
-        precio = request.form.get('precio')
-        cantidad = request.form.get('cantidad')
-        nombre_proveedor = request.form.get('nombre_proveedor')
-        contacto_proveedor = request.form.get('contacto_proveedor')
-
-        conn = get_db_connection()
-        cursor = conn.cursor()
-
-        # Actualizar campos de texto básicos
-        query = """
-            UPDATE productos_vendedor 
-            SET nombre_producto = %s, descripcion = %s, precio = %s, cantidad = %s, nombre_proveedor = %s, contacto_proveedor = %s
-            WHERE id_producto = %s
-        """
-        cursor.execute(query, (nombre, descripcion, precio, cantidad, nombre_proveedor, contacto_proveedor, id_producto))
-
-        # Actualizar imágenes solo si se adjuntaron nuevas
-        for i in range(1, 6):
-            file = request.files.get(f'imagen_{i}')
-            if file and file.filename != '':
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(filepath)
-                
-                cursor.execute(f"UPDATE productos_vendedor SET imagen_{i} = %s WHERE id_producto = %s", (filename, id_producto))
-
-        conn.commit()
-        cursor.close()
-        conn.close()
-
-        return jsonify({"status": "success", "message": "Producto actualizado correctamente"}), 200
-    except Exception as e:
-        return jsonify({"status": "error", "message": str(e)}), 500
-
-
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-    

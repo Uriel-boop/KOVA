@@ -79,18 +79,18 @@
                         <input type="number" step="0.01" id="precio" name="precio" required>
                     </div>
                     <div class="form-group">
-                        <label>Cantidad (Piezas / Stock)</label>
+                        <label>Cantidad (Stock)</label>
                         <input type="number" id="cantidad" name="cantidad" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Adjunta mínimo 5 imágenes del producto</label>
+                    <label>Adjunta mínimo 5 imágenes</label>
                     <div class="imagenes-grid">
-                        <div class="img-slot" id="slot-1">Imagen 1<input type="file" name="imagen_1" accept="image/*" onchange="previewSlot(this, 1)"></div>
-                        <div class="img-slot" id="slot-2">Imagen 2<input type="file" name="imagen_2" accept="image/*" onchange="previewSlot(this, 2)"></div>
-                        <div class="img-slot" id="slot-3">Imagen 3<input type="file" name="imagen_3" accept="image/*" onchange="previewSlot(this, 3)"></div>
-                        <div class="img-slot" id="slot-4">Imagen 4<input type="file" name="imagen_4" accept="image/*" onchange="previewSlot(this, 4)"></div>
-                        <div class="img-slot" id="slot-5">Imagen 5<input type="file" name="imagen_5" accept="image/*" onchange="previewSlot(this, 5)"></div>
+                        <div class="img-slot" id="slot-1">Img 1<input type="file" name="imagen_1" accept="image/*" onchange="previewSlot(this, 1)"></div>
+                        <div class="img-slot" id="slot-2">Img 2<input type="file" name="imagen_2" accept="image/*" onchange="previewSlot(this, 2)"></div>
+                        <div class="img-slot" id="slot-3">Img 3<input type="file" name="imagen_3" accept="image/*" onchange="previewSlot(this, 3)"></div>
+                        <div class="img-slot" id="slot-4">Img 4<input type="file" name="imagen_4" accept="image/*" onchange="previewSlot(this, 4)"></div>
+                        <div class="img-slot" id="slot-5">Img 5<input type="file" name="imagen_5" accept="image/*" onchange="previewSlot(this, 5)"></div>
                     </div>
                 </div>
                 <div class="form-group">
@@ -117,20 +117,20 @@
                 <input type="hidden" id="edit_id_producto">
                 <div class="form-group">
                     <label>Nombre del producto</label>
-                    <input type="text" id="edit_nombre" required>
+                    <input type="text" id="edit_nombre" name="nombre_producto" required>
                 </div>
                 <div class="form-group">
                     <label>Descripción</label>
-                    <textarea id="edit_descripcion" rows="3" required></textarea>
+                    <textarea id="edit_descripcion" name="descripcion" rows="3" required></textarea>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-group">
                         <label>Precio (MXN)</label>
-                        <input type="number" step="0.01" id="edit_precio" required>
+                        <input type="number" step="0.01" id="edit_precio" name="precio" required>
                     </div>
                     <div class="form-group">
                         <label>Cantidad (Stock)</label>
-                        <input type="number" id="edit_cantidad" required>
+                        <input type="number" id="edit_cantidad" name="cantidad" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -145,11 +145,11 @@
                 </div>
                 <div class="form-group">
                     <label>Nombre del proveedor</label>
-                    <input type="text" id="edit_nombre_proveedor">
+                    <input type="text" id="edit_nombre_proveedor" name="nombre_proveedor">
                 </div>
                 <div class="form-group">
                     <label>Contacto del proveedor</label>
-                    <input type="text" id="edit_contacto_proveedor">
+                    <input type="text" id="edit_contacto_proveedor" name="contacto_proveedor">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
                     <button type="submit" class="btn-kova" style="flex: 1; margin:0;">Actualizar Cambios</button>
@@ -221,7 +221,7 @@
                     for(let i=1; i<=5; i++) {
                         let slot = document.getElementById(`slot-${i}`);
                         slot.style.backgroundImage = '';
-                        slot.textContent = `Imagen ${i}`;
+                        slot.textContent = `Img ${i}`;
                     }
                     cargarMisProductos();
                 } else {
@@ -245,7 +245,7 @@
                         let imgsHtml = '';
                         for(let i=1; i<=5; i++) {
                             let imgName = p[`imagen_${i}`];
-                            if(imgName) {
+                            if(imgName && imgName !== 'None' && imgName !== '') {
                                 imgsHtml += `<div style="border:1px solid #ddd; width:45px; height:45px; border-radius:4px; overflow:hidden;"><img src="http://127.0.0.1:5000/static/uploads/${imgName}" style="width:100%; height:100%; object-fit:cover;"></div>`;
                             }
                         }
@@ -259,7 +259,7 @@
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Stock disponible:</strong> ${p.cantidad} piezas</div>
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Descripción:</strong> ${p.descripcion}</div>
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Proveedor:</strong> ${p.nombre_proveedor || 'N/A'} (${p.contacto_proveedor || 'Sin contacto'})</div>
-                                <div style="display:flex; gap:6px; margin-top:8px; align-items:center;">
+                                <div style="display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;">
                                     ${imgsHtml}
                                     <button onclick="abrirEditar(${p.id_producto})" style="margin-left:auto; background:var(--primary-accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-pen"></i> Editar</button>
                                 </div>
@@ -283,6 +283,13 @@
             document.getElementById('edit_cantidad').value = p.cantidad;
             document.getElementById('edit_nombre_proveedor').value = p.nombre_proveedor || '';
             document.getElementById('edit_contacto_proveedor').value = p.contacto_proveedor || '';
+
+            // Limpiar slots de edición visuales
+            for(let i=1; i<=5; i++) {
+                let slot = document.getElementById(`edit-slot-${i}`);
+                slot.style.backgroundImage = '';
+                slot.textContent = `Img ${i}`;
+            }
 
             document.getElementById('modal-editar').style.display = 'flex';
         }

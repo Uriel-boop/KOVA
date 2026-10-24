@@ -22,7 +22,7 @@
         .topbar { display: flex; justify-content: space-between; align-items: center; background: var(--white-pure); padding: 10px 24px; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .brand-badge { background-color: #FDECF0; color: var(--brand-identity); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
         
-        .cart-icon-container { position: relative; cursor: pointer; background: var(--soft-pink, #FDECF0); padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 8px; color: var(--brand-identity); font-weight: 700; }
+        .cart-icon-container { position: relative; cursor: pointer; background: #FDECF0; padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 8px; color: var(--brand-identity); font-weight: 700; }
         .cart-badge { background: var(--brand-identity); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; }
 
         .main-navigation { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
@@ -33,7 +33,6 @@
         .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
         .producto-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; background: white; display: flex; flex-direction: column; justify-content: space-between; }
         
-        /* Visor Estilo Mercado Libre */
         .ml-visor { display: flex; gap: 10px; height: 180px; margin-bottom: 12px; }
         .ml-miniaturas { display: flex; flex-direction: column; gap: 6px; width: 45px; overflow-y: auto; }
         .ml-miniaturas img { width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
@@ -44,7 +43,6 @@
         .btn-comprar { width: 100%; background-color: var(--brand-identity); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
         .btn-comprar:hover { background-color: var(--brand-hover); }
 
-        /* Modal Carrito Estilo Imagen 1 */
         .modal-carrito { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
         .carrito-contenido { background: white; width: 90%; max-width: 900px; border-radius: 16px; padding: 25px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; max-height: 90vh; overflow-y: auto; }
         .carrito-col { background: #fdfdfd; border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
@@ -81,22 +79,18 @@
 
     <main class="catalogo-container">
         <h1 style="font-size: 1.4rem; color: var(--primary-text);">Insumos y Productos para tu Mascota</h1>
-        <div class="productos-grid" id="grid-productos-publicos">
-            <!-- Se cargan dinámicamente -->
-        </div>
+        <div class="productos-grid" id="grid-productos-publicos"></div>
     </main>
 
-    <!-- Modal Carrito de Compras (Estilo Imagen 1) -->
+    <!-- Modal Carrito -->
     <div id="modal-carrito" class="modal-carrito">
         <div class="carrito-contenido">
-            <!-- Artículos Agregados -->
             <div class="carrito-col">
                 <h3 style="margin-bottom: 12px; color: var(--primary-accent);">Artículos Agregados</h3>
                 <div id="lista-articulos-carrito" style="max-height: 350px; overflow-y: auto;">
                     <p style="color: #777; font-size: 0.9rem;">Tu carrito está vacío.</p>
                 </div>
             </div>
-            <!-- Resumen de Compra -->
             <div class="carrito-col" style="display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
                     <h3 style="margin-bottom: 12px; color: var(--primary-accent);">Resumen de Compra</h3>
@@ -160,12 +154,19 @@
                 if(data.status === 'success' && data.productos.length > 0) {
                     productosDisponibles = data.productos;
                     productosDisponibles.forEach(p => {
-                        let imgs = [p.imagen_1, p.imagen_2, p.imagen_3, p.imagen_4, p.imagen_5].filter(img => img !== null && img !== undefined);
-                        let principalImg = imgs.length > 0 ? `/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
+                        let imgs = [];
+                        for(let i=1; i<=5; i++) {
+                            let imgName = p[`imagen_${i}`];
+                            if(imgName && imgName !== 'None' && imgName !== '') {
+                                imgs.push(imgName);
+                            }
+                        }
+
+                        let principalImg = imgs.length > 0 ? `http://127.0.0.1:5000/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
                         
                         let miniaturasHtml = '';
                         imgs.forEach(img => {
-                            miniaturasHtml += `<img src="/static/uploads/${img}" onclick="cambiarPrincipal(this, '${img}')" onmouseover="cambiarPrincipal(this, '${img}')">`;
+                            miniaturasHtml += `<img src="http://127.0.0.1:5000/static/uploads/${img}" onclick="cambiarPrincipal(this, '${img}')" onmouseover="cambiarPrincipal(this, '${img}')">`;
                         });
 
                         let card = document.createElement('div');
@@ -197,7 +198,7 @@
 
         function cambiarPrincipal(miniaturaImg, nombreArchivo) {
             let visorPrincipal = miniaturaImg.closest('.ml-visor').querySelector('.ml-principal img');
-            visorPrincipal.src = `/static/uploads/${nombreArchivo}`;
+            visorPrincipal.src = `http://127.0.0.1:5000/static/uploads/${nombreArchivo}`;
         }
 
         function agregarAlCarrito(idProducto) {
@@ -235,8 +236,14 @@
                 listaHtml = '<p style="color: #777; font-size: 0.9rem;">Tu carrito está vacío.</p>';
             } else {
                 carrito.forEach((item, index) => {
-                    let imgs = [item.imagen_1, item.imagen_2, item.imagen_3, item.imagen_4, item.imagen_5].filter(img => img !== null);
-                    let imgUrl = imgs.length > 0 ? `/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
+                    let imgs = [];
+                    for(let i=1; i<=5; i++) {
+                        let imgName = item[`imagen_${i}`];
+                        if(imgName && imgName !== 'None' && imgName !== '') {
+                            imgs.push(imgName);
+                        }
+                    }
+                    let imgUrl = imgs.length > 0 ? `http://127.0.0.1:5000/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
                     subtotal += (parseFloat(item.precio) * item.cantidad);
 
                     listaHtml += `
@@ -298,7 +305,6 @@
         function cerrarPago() { document.getElementById('modal-pago').style.display = 'none'; }
 
         function finalizarCompraExitosa() {
-            // Descontar en base de datos cada producto del carrito
             carrito.forEach(item => {
                 for(let i=0; i<item.cantidad; i++) {
                     fetch('http://127.0.0.1:5000/api/comprar_producto', {
