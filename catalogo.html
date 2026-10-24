@@ -3,974 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KOVA - Productos y Servicios</title>
+    <title>KOVA 2026 - Productos y Servicios</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            /* PALETA DE COLORES KOVA */
-            --primary-accent: #008BA3;        /* Azul Turquesa / Cyan */
-            --primary-accent-hover: #006F82;  /* Azul Turquesa Oscuro */
-            --primary-text: #0E2A47;          /* Azul Marino / Índigo */
-            --brand-identity: #F25487;        /* Rosa Magenta KOVA */
-            --brand-identity-hover: #D83C6F;  /* Rosa Magenta Oscuro */
-            --soft-pink: #FDECF0;             /* Rosa Pastel Suave */
-            --secondary-accent: #5E5CE6;      /* Azul Lavanda / Violeta */
-            --bg-gradient-turq: #EBF7FA;      /* Fondo Turquesa Claro */
-            --body-text: #4A5568;             /* Gris Oscuro Neutro */
-            --white-pure: #FFFFFF;            /* Blanco Puro */
-            --border-color: #CBD5E1;          /* Borde gris neutro */
-            --nav-bg-inactive: #DFF0F4;       /* Fondo inactivo de navegación */
-            --success-color: #10B981;         /* Verde para estado normal */
+            --primary-accent: #008BA3;        
+            --brand-identity: #F25487;        
+            --bg-gradient-turq: #EBF7FA;      
+            --body-text: #4A5568;             
+            --white-pure: #FFFFFF;            
+            --border-color: #CBD5E1;          
+            --nav-bg-inactive: #DFF0F4;       
         }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { background-color: var(--bg-gradient-turq); padding: 16px 20px; color: var(--body-text); display: flex; flex-direction: column; min-height: 100vh; }
+        .topbar { display: flex; justify-content: space-between; align-items: center; background: var(--white-pure); padding: 10px 24px; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .brand-badge { background-color: #FDECF0; color: var(--brand-identity); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+        .main-navigation { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
+        .nav-btn { flex: 1; text-align: center; padding: 10px 16px; background-color: var(--nav-bg-inactive); color: var(--primary-text); text-decoration: none; font-weight: 700; font-size: 0.88rem; border-radius: 10px; }
+        .nav-btn.active { background-color: var(--brand-identity) !important; color: white !important; }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-gradient-turq);
-            margin: 0;
-            padding: 16px 20px;
-            color: var(--body-text);
-            display: flex;
-            flex-direction: column;
-            min-height: 100vh;
-        }
-
-        /* Header Topbar */
-        .topbar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background-color: var(--white-pure);
-            padding: 10px 24px;
-            border-radius: 14px;
-            margin-bottom: 16px;
-            box-shadow: 0 4px 12px rgba(14, 42, 71, 0.05);
-        }
-
-        .brand-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .brand-logo {
-            height: 44px;
-            width: auto;
-            border-radius: 6px;
-            object-fit: contain;
-        }
-
-        .brand-badge {
-            background-color: var(--soft-pink);
-            color: var(--brand-identity);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 700;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        /* Buscador Central */
-        .search-wrapper {
-            flex: 0 1 550px;
-        }
-
-        .search-bar {
-            width: 100%;
-            padding: 9px 20px;
-            border: 1px solid var(--border-color);
-            border-radius: 24px;
-            outline: none;
-            font-size: 0.88rem;
-            color: var(--body-text);
-            background-color: var(--white-pure);
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .search-bar::placeholder {
-            color: #94A3B8;
-        }
-
-        .search-bar:focus {
-            border-color: var(--primary-accent);
-            box-shadow: 0 0 0 3px rgba(0, 139, 163, 0.15);
-        }
-
-        /* Acciones del Header */
-        .header-actions {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .btn-cart-header {
-            background: transparent;
-            border: none;
-            cursor: pointer;
-            position: relative;
-            font-size: 1.3rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4px;
-            color: var(--primary-text);
-        }
-
-        .cart-badge {
-            position: absolute;
-            top: -4px;
-            right: -6px;
-            background-color: var(--brand-identity);
-            color: var(--white-pure);
-            font-size: 0.7rem;
-            font-weight: 700;
-            border-radius: 50%;
-            min-width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .btn-logout {
-            border: 1.5px solid var(--brand-identity);
-            color: var(--brand-identity);
-            background-color: transparent;
-            padding: 6px 18px;
-            border-radius: 10px;
-            font-size: 0.88rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .btn-logout:hover {
-            background-color: var(--brand-identity);
-            color: var(--white-pure);
-        }
-
-        /* Pestañas Principales de Navegación */
-        .sub-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            text-align: center;
-            padding: 10px 16px;
-            background-color: var(--nav-bg-inactive);
-            color: var(--primary-text);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.88rem;
-            border-radius: 10px;
-            transition: all 0.2s ease-in-out;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .tab-btn:hover {
-            background-color: #CBE6ED;
-        }
-
-        .tab-btn.active {
-            background-color: var(--brand-identity) !important;
-            color: var(--white-pure) !important;
-            box-shadow: 0 3px 10px rgba(242, 84, 135, 0.3);
-        }
-
-        /* Banner Principal / Editor */
-        .hero-banner {
-            background-color: var(--white-pure);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(14, 42, 71, 0.04);
-        }
-
-        .hero-banner h2 {
-            margin: 0 0 6px 0;
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--primary-text);
-        }
-
-        .hero-banner p {
-            margin: 0;
-            font-size: 0.88rem;
-            color: var(--body-text);
-        }
-
-        /* === NAVEGACIÓN DE PESTAÑAS PRINCIPALES === */
-        .main-navigation {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .nav-btn {
-            flex: 1;
-            text-align: center;
-            padding: 10px 16px;
-            background-color: var(--nav-bg-inactive);
-            color: var(--primary-text);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 0.88rem;
-            border-radius: 10px;
-            transition: all 0.2s ease-in-out;
-            border: none;
-            cursor: pointer;
-        }
-
-        .nav-btn:hover {
-            background-color: #CBE6ED;
-        }
-
-        .nav-btn.active {
-            background-color: var(--brand-identity) !important;
-            color: var(--white-pure) !important;
-            box-shadow: 0 3px 10px rgba(242, 84, 135, 0.3);
-        }
-
+        .catalogo-container { background: var(--white-pure); border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); flex: 1; }
+        .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
+        .producto-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; background: white; display: flex; flex-direction: column; justify-content: space-between; }
         
+        /* Estilo Mercado Libre Visor */
+        .ml-visor { display: flex; gap: 10px; height: 180px; margin-bottom: 12px; }
+        .ml-miniaturas { display: flex; flex-direction: column; gap: 6px; width: 45px; overflow-y: auto; }
+        .ml-miniaturas img { width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
+        .ml-miniaturas img:hover { border-color: var(--primary-accent); }
+        .ml-principal { flex: 1; display: flex; align-items: center; justify-content: center; background: #f9f9f9; border-radius: 8px; overflow: hidden; }
+        .ml-principal img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
-        /* CONTENEDOR PRINCIPAL */
-        .main-card {
-            background-color: var(--white-pure);
-            border-radius: 16px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 4px 12px rgba(14, 42, 71, 0.04);
-        }
-
-        .main-title {
-            font-size: 1.4rem;
-            font-weight: 800;
-            color: var(--primary-text);
-            margin-bottom: 4px;
-        }
-
-        .main-subtitle {
-            font-size: 0.88rem;
-            color: #64748B;
-            margin-bottom: 16px;
-        }
-
-        /* SUB-NAVEGACIÓN INTERNA */
-        .sub-nav {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .sub-nav-btn {
-            background: transparent;
-            border: none;
-            font-size: 0.9rem;
-            font-weight: 700;
-            color: var(--body-text);
-            padding: 6px 14px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .sub-nav-btn.active-tab {
-            background-color: var(--brand-identity);
-            color: var(--white-pure);
-        }
-
-        .separator {
-            color: #CBD5E1;
-        }
-
-        /* GRID DE TARJETAS (Catálogo) */
-        .catalog-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-            gap: 20px;
-        }
-
-        .catalog-grid.hidden {
-            display: none !important;
-        }
-
-        /* TARJETAS ESTILO GALERÍA */
-        .item-card {
-            border: 1px solid var(--border-color);
-            border-radius: 16px;
-            background-color: var(--white-pure);
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            overflow: hidden;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-
-        .item-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(14, 42, 71, 0.08);
-        }
-
-        .img-container {
-            width: 100%;
-            height: 180px;
-            overflow: hidden;
-            background-color: #F1F5F9;
-        }
-
-        .img-container img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .card-content {
-            padding: 14px;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            justify-content: space-between;
-        }
-
-        .rating-collars {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 6px;
-            font-size: 0.75rem;
-        }
-
-        .item-title {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--primary-text);
-            margin-bottom: 6px;
-        }
-
-        .item-desc {
-            font-size: 0.82rem;
-            color: #64748B;
-            margin-bottom: 14px;
-            line-height: 1.35;
-        }
-
-        .item-price-row {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: var(--primary-text);
-            margin-bottom: 12px;
-        }
-
-        .btn-card {
-            width: 100%;
-            background-color: var(--brand-identity);
-            color: var(--white-pure);
-            border: none;
-            border-radius: 10px;
-            padding: 10px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-            box-shadow: 0 3px 8px rgba(242, 84, 135, 0.2);
-        }
-
-        .btn-card:hover {
-            background-color: var(--brand-identity-hover);
-        }
-
-        /* MODAL DEL CARRITO */
-        .modal-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: rgba(14, 42, 71, 0.6);
-            backdrop-filter: blur(4px);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .modal-overlay.hidden {
-            display: none !important;
-        }
-
-        .cart-modal-container {
-            background-color: var(--primary-text);
-            color: var(--white-pure);
-            width: 90%;
-            max-width: 800px;
-            padding: 24px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-        }
-
-        .cart-modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding-bottom: 12px;
-        }
-
-        .cart-modal-title {
-            color: var(--white-pure);
-            font-size: 1.2rem;
-            font-weight: 700;
-        }
-
-        .btn-close-modal {
-            background: transparent;
-            border: none;
-            color: var(--white-pure);
-            font-size: 1.5rem;
-            cursor: pointer;
-        }
-
-        .cart-modal-grid {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 20px;
-        }
-
-        @media (max-width: 700px) {
-            .cart-modal-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .cart-section-title {
-            font-size: 0.9rem;
-            font-weight: 700;
-            margin-bottom: 12px;
-            color: #94A3B8;
-        }
-
-        .cart-box-white {
-            background-color: var(--white-pure);
-            color: var(--primary-text);
-            border-radius: 12px;
-            padding: 16px;
-            min-height: 200px;
-            max-height: 320px;
-            overflow-y: auto;
-        }
-
-        .cart-item-card {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding-bottom: 12px;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #E2E8F0;
-        }
-
-        .cart-item-card:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-
-        .cart-item-img {
-            width: 48px;
-            height: 48px;
-            border-radius: 8px;
-            object-fit: cover;
-        }
-
-        .cart-item-info {
-            flex-grow: 1;
-        }
-
-        .cart-title-item {
-            font-size: 0.85rem;
-            font-weight: 700;
-        }
-
-        .btn-qty {
-            background-color: #E2E8F0;
-            border: none;
-            padding: 2px 8px;
-            border-radius: 4px;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
-        .btn-delete-item {
-            background: transparent;
-            border: none;
-            color: var(--danger-color);
-            cursor: pointer;
-        }
-
-        .btn-pay {
-            width: 100%;
-            background-color: var(--brand-identity);
-            color: var(--white-pure);
-            border: none;
-            border-radius: 10px;
-            padding: 12px;
-            font-weight: 700;
-            cursor: pointer;
-            margin-top: 16px;
-            transition: background-color 0.2s ease;
-        }
-
-        .btn-pay:hover {
-            background-color: var(--brand-identity-hover);
-        }
-
-        footer {
-            text-align: center;
-            font-size: 0.78rem;
-            color: #64748B;
-            margin-top: auto;
-            padding: 16px 0 8px 0;
-        }
-
-        
-
-
+        .btn-comprar { width: 100%; background-color: var(--brand-identity); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
+        .btn-comprar:hover { background-color: #D83C6F; }
     </style>
 </head>
 <body>
-    <!-- Header Topbar -->
+
     <header class="topbar">
-        <div class="brand-container">
-            <img src="img/LOGO_KOVA.png" alt="Logo KOVA" style="height: 48px; width: auto; border-radius: 6px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+            <img src="img/LOGO_KOVA.png" alt="Logo" style="height: 48px;">
             <span class="brand-badge">PRODUCTOS Y SERVICIOS</span>
         </div>
-
-        <div class="search-wrapper">
-            <input type="text" class="search-bar" placeholder="Buscar por nombre, tutor, chip, o token NFC rotatorio...">
-        </div>
-        <div class="header-actions">
-            <button class="btn-cart-header" onclick="toggleCarrito()" title="Ver Carrito de Compras">
-                🛒 <span class="cart-badge" id="cart-count-badge">0</span>
-            </button>
-            <button onclick="cerrarSesion()" class="btn-logout">Cerrar Sesión</button>
-        </div>
+        <button onclick="cerrarSesion()" style="border: 1.5px solid var(--brand-identity); color: var(--brand-identity); background: transparent; padding: 6px 18px; border-radius: 10px; font-weight: 700; cursor: pointer;">Cerrar Sesión</button>
     </header>
 
-    <!-- Navegación Dinámica -->
-    <div id="navbar-container"></div>
-
-    <!-- Contenedor Principal -->
-    <div class="main-card">
-        <h1 class="main-title">Productos y Servicios</h1>
-        <p class="main-subtitle">Explora los servicios de atención canina e insumos para tu mascota.</p>
-
-        <div class="sub-nav">
-            
-            <span class="separator">|</span>
-            <button class="sub-nav-btn active-tab" id="btn-servicios" onclick="mostrarSeccion('servicios')">Servicios</button>
-            <span class="separator">-</span>
-            <button class="sub-nav-btn" id="btn-productos" onclick="mostrarSeccion('productos')">Productos</button>
-        </div>
-
-        <!-- VISTA DE SERVICIOS -->
-        <div id="vista-servicios" class="catalog-grid">
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Paseo"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Paseo - Caminata</div>
-                        <div class="item-desc">Caminata matutina personalizada con registro de ruta y monitoreo.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>55 5555 5555</span></div>
-                        <button class="btn-card" onclick="alert('Contactando Servicio...')">Contactar</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Médico"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Servicio Médico a Domicilio</div>
-                        <div class="item-desc">Atención veterinaria profesional, revisiones generales y vacunas.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>77 7777 7777</span></div>
-                        <button class="btn-card" onclick="alert('Contactando Servicio...')">Contactar</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Estética"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Estética Canina</div>
-                        <div class="item-desc">Cortes de pelo, baño antipulgas y cuidado de uñas a domicilio.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>66 6666 6666</span></div>
-                        <button class="btn-card" onclick="alert('Contactando Servicio...')">Contactar</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Alimento"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Alimento a Domicilio</div>
-                        <div class="item-desc">Entrega programada de croquetas y suplementos de alta calidad.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>44 4444 4444</span></div>
-                        <button class="btn-card" onclick="alert('Contactando Servicio...')">Contactar</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- VISTA DE PRODUCTOS -->
-        <div id="vista-productos" class="catalog-grid hidden">
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Collar"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Collar Inteligente</div>
-                        <div class="item-desc">Collar liviano de 18 gramos con tecnología NFC y chip de rastreo.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$1,900 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Collar Inteligente', 1900, 'Collar de 18 gramos...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Placa"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Placa Medallón</div>
-                        <div class="item-desc">Medallón de plata grabado con token dinámico e identificación digital.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$900 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Placa Medallón', 900, 'Medallón de plata...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Cuna"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Cuna Térmica</div>
-                        <div class="item-desc">Cuna ergonómica autorregulable para el descanso de tu mascota.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$1,100 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Cuna Térmica', 1100, 'Cuna térmica...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Bulto"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Bulto de Alimento</div>
-                        <div class="item-desc">Bulto de 20 kilos fórmula nutricional balanceada.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$800 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Bulto de Alimento', 800, 'Bulto de 20 kilos...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Placa"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Placa Medallón</div>
-                        <div class="item-desc">Medallón de plata grabado con token dinámico e identificación digital.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$900 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Placa Medallón', 900, 'Medallón de plata...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Placa"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Placa Medallón</div>
-                        <div class="item-desc">Medallón de plata grabado con token dinámico e identificación digital.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$900 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Placa Medallón', 900, 'Medallón de plata...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Placa"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Placa Medallón</div>
-                        <div class="item-desc">Medallón de plata grabado con token dinámico e identificación digital.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$900 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Placa Medallón', 900, 'Medallón de plata...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-            <div class="item-card">
-                <div class="img-container"><img src="img_kova.jpeg" alt="Placa"></div>
-                <div class="card-content">
-                    <div>
-                        <div class="rating-collars"><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span><span>🐾</span></div>
-                        <div class="item-title">Placa Medallón</div>
-                        <div class="item-desc">Medallón de plata grabado con token dinámico e identificación digital.</div>
-                    </div>
-                    <div>
-                        <div class="item-price-row"><span>$900 MXN</span></div>
-                        <button class="btn-card" onclick="agregarAlCarrito('Placa Medallón', 900, 'Medallón de plata...', 'img_kova.jpeg')">Agregar al carrito</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div id="navbar-container">
+        <nav class="main-navigation">
+            <a href="kova_usuarios.html" class="nav-btn">Expediente 360°</a>
+            <a href="mapa.html" class="nav-btn">Mapa & Geocercas</a>
+            <a href="galeria.html" class="nav-btn">Galería de Efectos</a>
+            <a href="catalogo.html" class="nav-btn active">Productos y Servicios</a>
+            <a href="suscripciones.html" class="nav-btn">Suscripciones</a>
+        </nav>
     </div>
 
-    <!-- VENTANA EMERGENTE DE CARRITO DE COMPRAS -->
-    <div id="modal-carrito" class="modal-overlay hidden">
-        <div class="cart-modal-container">
-            <div class="cart-modal-header">
-                <h2 class="cart-modal-title">Carrito de Compras</h2>
-                <button class="btn-close-modal" onclick="toggleCarrito()">×</button>
-            </div>
-
-            <div class="cart-modal-grid">
-                <div>
-                    <h3 class="cart-section-title">Artículos agregados</h3>
-                    <div class="cart-box-white">
-                        <p class="empty-cart-msg" id="msg-empty">No hay artículos agregados por<br>el momento</p>
-                        <div class="cart-items-list hidden" id="items-list"></div>
-                    </div>
-                </div>
-
-                <div>
-                    <h3 class="cart-section-title">Resumen de Compra</h3>
-                    <div class="summary-box-white">
-                        <div class="summary-row-user">
-                            Titular de compra "Usuario"
-                        </div>
-
-                        <div class="summary-details">
-                            <div class="summary-line">
-                                <span>Productos</span>
-                                <span id="summary-total-count">0</span>
-                            </div>
-                            <div class="summary-line">
-                                <span>Subtotal</span>
-                                <span id="summary-subtotal">$0.00 MXN</span>
-                            </div>
-                            <div class="summary-line">
-                                <span>IVA (16%)</span>
-                                <span id="summary-iva">$0.00 MXN</span>
-                            </div>
-                            <hr class="summary-divider">
-                            <div class="summary-line total-line">
-                                <span>Total a pagar:</span>
-                                <strong id="summary-total">$0.00 MXN</strong>
-                            </div>
-                        </div>
-
-                        <button class="btn-pay" onclick="procesarPago()">Continuar a pagar</button>
-                    </div>
-                </div>
-            </div>
+    <main class="catalogo-container">
+        <h1 style="font-size: 1.4rem; color: var(--primary-text);">Insumos y Productos para tu Mascota</h1>
+        <div class="productos-grid" id="grid-productos-publicos">
+            <!-- Se cargan dinámicamente -->
         </div>
-    </div>
+    </main>
 
-    <footer>
-        KOVA 2026 • JJM Tecnologías Innovadoras, S.A. de C.V. • Trazabilidad IoT & Identificación NFC Canina
-    </footer>
-
-    <!-- LÓGICA DE INTERACCIÓN Y CARRITO DE COMPRAS -->
     <script>
-        let carrito = [];
-
-        function mostrarSeccion(seccion) {
-            const vistaServicios = document.getElementById('vista-servicios');
-            const vistaProductos = document.getElementById('vista-productos');
-            const btnServicios = document.getElementById('btn-servicios');
-            const btnProductos = document.getElementById('btn-productos');
-
-            if (seccion === 'servicios') {
-                vistaServicios.classList.remove('hidden');
-                vistaProductos.classList.add('hidden');
-                btnServicios.classList.add('active-tab');
-                btnProductos.classList.remove('active-tab');
-            } else {
-                vistaProductos.classList.remove('hidden');
-                vistaServicios.classList.add('hidden');
-                btnProductos.classList.add('active-tab');
-                btnServicios.classList.remove('active-tab');
-            }
-        }
-
-        function toggleCarrito() {
-            const modal = document.getElementById('modal-carrito');
-            modal.classList.toggle('hidden');
-        }
-
-        function agregarAlCarrito(nombre, precio, desc, img) {
-            const index = carrito.findIndex(item => item.nombre === nombre);
-            if (index !== -1) {
-                carrito[index].cantidad += 1;
-            } else {
-                carrito.push({ nombre, precio, desc, img, cantidad: 1 });
-            }
-            actualizarCarritoUI();
-            const modal = document.getElementById('modal-carrito');
-            if (modal.classList.contains('hidden')) {
-                toggleCarrito();
-            }
-        }
-
-        function cambiarCantidad(index, delta) {
-            carrito[index].cantidad += delta;
-            if (carrito[index].cantidad <= 0) {
-                carrito.splice(index, 1);
-            }
-            actualizarCarritoUI();
-        }
-
-        function eliminarItem(index) {
-            carrito.splice(index, 1);
-            actualizarCarritoUI();
-        }
-
-        function actualizarCarritoUI() {
-            const badge = document.getElementById('cart-count-badge');
-            const summaryCount = document.getElementById('summary-total-count');
-            const summarySubtotal = document.getElementById('summary-subtotal');
-            const summaryIva = document.getElementById('summary-iva');
-            const summaryTotal = document.getElementById('summary-total');
-            const msgEmpty = document.getElementById('msg-empty');
-            const itemsList = document.getElementById('items-list');
-
-            let totalArticulos = 0;
-            let subtotal = 0;
-
-            carrito.forEach(item => {
-                totalArticulos += item.cantidad;
-                subtotal += item.precio * item.cantidad;
-            });
-
-            const iva = subtotal * 0.16;
-            const total = subtotal + iva;
-
-            badge.innerText = totalArticulos;
-            summaryCount.innerText = totalArticulos;
-            summarySubtotal.innerText = `$${subtotal.toFixed(2)} MXN`;
-            summaryIva.innerText = `$${iva.toFixed(2)} MXN`;
-            summaryTotal.innerText = `$${total.toFixed(2)} MXN`;
-
-            if (carrito.length === 0) {
-                msgEmpty.classList.remove('hidden');
-                itemsList.classList.add('hidden');
-            } else {
-                msgEmpty.classList.add('hidden');
-                itemsList.classList.remove('hidden');
-                
-                itemsList.innerHTML = '';
-                carrito.forEach((item, index) => {
-                    const card = document.createElement('div');
-                    card.className = 'cart-item-card';
-                    card.innerHTML = `
-                        <img src="${item.img}" alt="${item.nombre}" class="cart-item-img">
-                        <div class="cart-item-info">
-                            <h4 class="cart-item-title">${item.nombre}</h4>
-                            <p class="cart-item-desc">${item.desc}</p>
-                            <span class="cart-item-price">$${item.precio * item.cantidad} MXN</span>
-                        </div>
-                        <div class="cart-item-actions">
-                            <div class="qty-controls">
-                                <button class="btn-qty" onclick="cambiarCantidad(${index}, -1)">-</button>
-                                <span class="qty-number">${item.cantidad}</span>
-                                <button class="btn-qty" onclick="cambiarCantidad(${index}, 1)">+</button>
-                            </div>
-                            <button class="btn-delete-item" onclick="eliminarItem(${index})" title="Eliminar">🗑️</button>
-                        </div>
-                    `;
-                    itemsList.appendChild(card);
-                });
-            }
-        }
-
-        function procesarPago() {
-            if (carrito.length === 0) {
-                alert('El carrito está vacío.');
-                return;
-            }
-            alert('Procesando pago del pedido...');
-            carrito = [];
-            actualizarCarritoUI();
-            toggleCarrito();
-        }
-
-        // Carga y resalta proporcionalmente la barra de navegación de 4 pestañas
         document.addEventListener('DOMContentLoaded', function() {
-            const currentPage = window.location.pathname.split('/').pop() || 'kova_usuarios.html';
-
-            const navHTML = `
-            <nav class="main-navigation">
-                <a href="kova_usuarios.html" class="nav-btn ${currentPage === 'kova_usuarios.html' ? 'active' : ''}">Expediente 360°</a>
-                <a href="mapa.html" class="nav-btn ${currentPage === 'mapa.html' ? 'active' : ''}">Mapa & Geocercas</a>
-                <a href="galeria.html" class="nav-btn ${currentPage === 'galeria.html' ? 'active' : ''}">Galería de Efectos</a>
-                <a href="catalogo.html" class="nav-btn ${currentPage === 'catalogo.html' ? 'active' : ''}">Productos y Servicios</a>
-                <a href="suscripciones.html" class="nav-btn ${currentPage === 'suscripciones.html' ? 'active' : ''}">Suscripciones</a>
-            </nav>
-            `;
-
-            const navContainer = document.getElementById('navbar-container');
-            if (navContainer) {
-                navContainer.innerHTML = navHTML;
-            }
+            cargarCatalogoProductos();
         });
 
+        function cargarCatalogoProductos() {
+            fetch('http://127.0.0.1:5000/api/productos')
+            .then(res => res.json())
+            .then(data => {
+                const grid = document.getElementById('grid-productos-publicos');
+                grid.innerHTML = '';
+                if(data.status === 'success' && data.productos.length > 0) {
+                    data.productos.forEach(p => {
+                        let imgs = [p.imagen_1, p.imagen_2, p.imagen_3, p.imagen_4, p.imagen_5].filter(img => img !== null);
+                        let principalImg = imgs.length > 0 ? `/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
+                        
+                        let miniaturasHtml = '';
+                        imgs.forEach(img => {
+                            // Se cambia con click (también responde al hover si se desea)
+                            miniaturasHtml += `<img src="/static/uploads/${img}" onclick="cambiarPrincipal(this, '${img}')" onmouseover="cambiarPrincipal(this, '${img}')">`;
+                        });
+
+                        let card = document.createElement('div');
+                        card.className = 'producto-card';
+                        card.innerHTML = `
+                            <div>
+                                <div class="ml-visor">
+                                    <div class="ml-miniaturas">${miniaturasHtml}</div>
+                                    <div class="ml-principal">
+                                        <img src="${principalImg}" alt="Producto">
+                                    </div>
+                                </div>
+                                <h3 style="font-size: 1rem; color: var(--primary-text);">${p.nombre_producto}</h3>
+                                <p style="font-size: 0.8rem; color: var(--body-text); margin: 6px 0;">${p.descripcion}</p>
+                                <div style="font-size: 0.78rem; color: #666; margin-bottom: 4px;"><strong>Stock disponible:</strong> <span id="stock-${p.id_producto}">${p.cantidad}</span> piezas</div>
+                            </div>
+                            <div>
+                                <div style="font-weight: 800; font-size: 1.1rem; color: var(--primary-accent);">$${p.precio} MXN</div>
+                                <button class="btn-comprar" onclick="comprarProducto(${p.id_producto})">Comprar ahora</button>
+                            </div>
+                        `;
+                        grid.appendChild(card);
+                    });
+                } else {
+                    grid.innerHTML = '<p>No hay productos disponibles por el momento.</p>';
+                }
+            });
+        }
+
+        function cambiarPrincipal(miniaturaImg, nombreArchivo) {
+            let visorPrincipal = miniaturaImg.closest('.ml-visor').querySelector('.ml-principal img');
+            visorPrincipal.src = `/static/uploads/${nombreArchivo}`;
+        }
+
+        function comprarProducto(idProducto) {
+            fetch('http://127.0.0.1:5000/api/comprar_producto', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id_producto: idProducto })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert("¡Compra realizada con éxito! Se ha descontado 1 pieza del inventario.");
+                    document.getElementById(`stock-${idProducto}`).textContent = data.stock_restante;
+                } else {
+                    alert("Error: " + data.message);
+                }
+            })
+            .catch(err => alert("Error de conexión al procesar la compra."));
+        }
+
         function cerrarSesion() {
-            localStorage.removeItem('kova_current_user');
-            alert("Has cerrado sesión exitosamente.");
-            window.location.href = "index.html";
+            localStorage.clear();
+            window.location.href = 'index.html';
         }
     </script>
 </body>
