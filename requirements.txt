@@ -5,3 +5,4 @@ google-auth
 mysql-connector-python
 requests
 twilio
+Pillow

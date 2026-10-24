@@ -15,6 +15,73 @@ from twilio.rest import Client
 import json
 from werkzeug.utils import secure_filename
 
+from PIL import Image, ImageOps, ImageEnhance, ImageDraw
+
+def ejecutar_ia_propia(input_path, output_path, efecto):
+    """
+    Procesa la imagen subida aplicando transformaciones visuales simulando la IA
+    según el efecto seleccionado en la galería KOVA.
+    """
+    try:
+        # Abrir la imagen original de la mascota
+        img = Image.open(input_path).convert("RGBA")
+        
+        # Redimensionar a un formato estándar de 800x800 manteniendo proporción
+        img.thumbnail((800, 800), Image.Resampling.LANCZOS)
+        
+        # Crear un fondo base según el efecto
+        width, height = img.size
+        base_canvas = Image.new("RGBA", (width, height))
+        
+        efecto_lower = efecto.lower()
+        
+        if "verano" in efecto_lower or "playa" in efecto_lower:
+            # Filtro cálido de verano / playa (Tono dorado/cyan)
+            # Creamos un fondo con tinte cálido
+            overlay = Image.new("RGBA", (width, height), (255, 220, 150, 100))
+            base_canvas = Image.alpha_composite(img, overlay)
+            
+            # Marco decorativo estilo polaroid / playero
+            draw = ImageDraw.Draw(base_canvas)
+            draw.rectangle([10, 10, width-10, height-10], outline=(0, 139, 163, 220), width=6)
+            
+        elif "bambi" in efecto_lower or "kimono" in efecto_lower:
+            # Filtro oriental / elegante (Tono rosado/suave)
+            overlay = Image.new("RGBA", (width, height), (242, 84, 135, 60))
+            base_canvas = Image.alpha_composite(img, overlay)
+            
+            draw = ImageDraw.Draw(base_canvas)
+            draw.rectangle([15, 15, width-15, height-15], outline=(242, 84, 135, 255), width=8)
+            
+        elif "nocturno" in efecto_lower:
+            # Filtro nocturno con tonos azules oscuros
+            enhancer = ImageEnhance.Brightness(img)
+            img = enhancer.enhance(0.7)  # Oscurecer un poco
+            overlay = Image.new("RGBA", (width, height), (20, 30, 80, 120))
+            base_canvas = Image.alpha_composite(img, overlay)
+            
+        elif "orgullo" in efecto_lower or "tricolor" in efecto_lower:
+            # Filtro tricolor festivo
+            overlay = Image.new("RGBA", (width, height), (0, 139, 163, 70))
+            base_canvas = Image.alpha_composite(img, overlay)
+            
+        else:
+            # Efecto estándar general
+            base_canvas = img
+
+        # Guardar la imagen procesada resultante
+        final_img = base_canvas.convert("RGB")
+        final_img.save(output_path, "JPEG", quality=95)
+        print(f"IA aplicada exitosamente para el efecto: {effect := efecto} en {output_path}")
+        return True
+
+    except Exception as e:
+        print(f"Error procesando la imagen con IA: {str(e)}")
+        # Fallback de respaldo: copiar archivo original si ocurre algún error gráfico
+        import shutil
+        shutil.copyfile(input_path, output_path)
+        return False
+
 # 1. Crear la instancia única de Flask
 app = Flask(__name__)
 
