@@ -72,7 +72,7 @@ def ejecutar_ia_propia(input_path, output_path, efecto):
         # Guardar la imagen procesada resultante
         final_img = base_canvas.convert("RGB")
         final_img.save(output_path, "JPEG", quality=95)
-        print(f"IA aplicada exitosamente para el efecto: {effect := efecto} en {output_path}")
+        print(f"IA aplicada exitosamente para el efecto: {efecto} en {output_path}")
         return True
 
     except Exception as e:
