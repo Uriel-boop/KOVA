@@ -5,5 +5,5 @@ google-auth
 mysql-connector-python
 requests
 twilio
-rembg
+rembg[cpu]
 Pillow
