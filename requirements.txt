@@ -5,4 +5,5 @@ google-auth
 mysql-connector-python
 requests
 twilio
+rembg
 Pillow

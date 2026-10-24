@@ -15,72 +15,82 @@ from twilio.rest import Client
 import json
 from werkzeug.utils import secure_filename
 
-import replicate
 import shutil
+from PIL import Image
+import io
+from rembg import remove
 
 def ejecutar_ia_propia(input_path, output_path, efecto):
     """
-    Envía la foto de la mascota y el prompt descriptivo del efecto a Replicate API
-    para generar una imagen transformada con Inteligencia Artificial generativa.
+    Composición local: Elimina el fondo de la mascota con IA (rembg) 
+    y la pega sobre un escenario prediseñado según el efecto seleccionado.
     """
     try:
-        # 1. Configurar tu API Token de Replicate (puedes ponerlo directamente o como variable de entorno)
-        # O mejor aún, guárdalo en os.environ['REPLICATE_API_TOKEN'] = 'tu_token_aqui'
-        if "REPLICATE_API_TOKEN" not in os.environ:
-            os.environ["REPLICATE_API_TOKEN"] = "r8_ZP8X1DqLdtPn3RZciC5s290VY710yO50b5hkO" # <--- Reemplaza aquí con tu token
-            
+        print(f"Iniciando composición local para el efecto: {efecto}...")
 
-        # 2. Diccionario de Prompts profesionales basados en tus efectos de la galería
-        prompts_efectos = {
-            "Verano Caribeño en Doña Rosa": "A cute chihuahua dog sitting on a sunny tropical beach wearing sunglasses, surrounded by colorful inflatable donuts, vibrant summer colors, masterpiece, photorealistic, highly detailed",
-            "Bambi Zen - Kimono & Abanico": "A cute chihuahua dog dressed in an elegant traditional Japanese red silk kimono, holding a traditional oriental folding fan, studio portrait, cinematic red lighting, detailed costume, masterpiece",
-            "Festival Nocturno de Carasnos": "A cute chihuahua dog at a magical night festival with glowing lanterns and festive colorful lights in the background, cinematic lighting, highly detailed digital art",
-            "Orgullo Tricolor - Camiseta México": "A cute chihuahua dog wearing a professional Mexican soccer jersey celebrating proudly, festive stadium background with confetti, vibrant colors, photorealistic"
-        }
+        # 1. Leer la imagen original del usuario
+        with open(input_path, 'rb') as i:
+            input_data = i.read()
+        
+        # 2. IA LOCAL: Remover el fondo (Extraer al perrito)
+        # Nota: La primera vez que se ejecute, descargará un pequeño modelo de IA (~170MB)
+        output_data = remove(input_data)
+        
+        # Convertir los bytes resultantes a una imagen manipulable con Pillow
+        mascota_sin_fondo = Image.open(io.BytesIO(output_data)).convert("RGBA")
 
-        # Obtener el prompt descriptivo del efecto o usar uno genérico
-        prompt_texto = prompts_efectos.get(efecto, f"A cute chihuahua dog with {efecto}, high quality digital art, photorealistic")
+        # 3. Determinar qué fondo usar según el efecto
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        fondos_dir = os.path.join(base_dir, 'static', 'fondos')
 
-        print(f"Enviando imagen a Replicate para procesar efecto: '{efecto}'...")
+        if "Verano" in efecto:
+            fondo_path = os.path.join(fondos_dir, "fondo_verano.jpg")
+        elif "Bambi" in efecto:
+            fondo_path = os.path.join(fondos_dir, "fondo_zen.jpg")
+        elif "Nocturno" in efecto:
+            fondo_path = os.path.join(fondos_dir, "fondo_festival.jpg")
+        elif "Tricolor" in efecto:
+            fondo_path = os.path.join(fondos_dir, "fondo_tricolor.jpg")
+        else:
+            fondo_path = os.path.join(fondos_dir, "fondo_verano.jpg") # Fallback por defecto
 
-        # 3. Abrir la imagen en modo binario para enviarla a Replicate
-        with open(input_path, "rb") as image_file:
-            # Usaremos un modelo estable de Stable Diffusion Image-to-Image o ControlNet en Replicate
-            # Ejemplo con un modelo robusto de transformaciones visuales: stability-ai/sdxl
-            output = replicate.run(
-                "stability-ai/sdxl:39ed62f2a78f435b84fa3093e6c090674293d84b2c1ef160c2cc6d4216f9f3f2",
-                input={
-                    "prompt": prompt_texto,
-                    "image": image_file,
-                    "prompt_strength": 0.75, # Qué tanto cambia la IA la imagen (0.0 = igual, 1.0 = totalmente nuevo)
-                    "num_outputs": 1,
-                    "aspect_ratio": "1:1",
-                    "output_format": "jpg",
-                    "output_quality": 90
-                }
-            )
+        # Si no encuentra la imagen de fondo, guarda solo a la mascota sin fondo
+        if not os.path.exists(fondo_path):
+            print(f"ADVERTENCIA: No se encontró el fondo en {fondo_path}. Guardando sin fondo.")
+            final_img = mascota_sin_fondo.convert("RGB")
+            final_img.save(output_path, "JPEG", quality=95)
+            return True
 
-        # 4. Replicate devuelve una URL con la imagen generada en la nube. La descargamos y guardamos localmente.
-        if output and len(output) > 0:
-            image_url = output[0]
-            response = requests.get(image_url)
-            if response.status_code == 200:
-                with open(output_path, "wb") as f:
-                    f.write(response.content)
-                print(f"¡Imagen generada por IA guardada exitosamente en {output_path}!")
-                return True
+        # 4. Preparar el fondo (Estandarizar tamaño a 800x800)
+        fondo = Image.open(fondo_path).convert("RGBA")
+        fondo = fondo.resize((800, 800), Image.Resampling.LANCZOS)
 
-        # Si por algo no devolvió salida, respaldar con copia
-        shutil.copyfile(input_path, output_path)
-        return False
+        # 5. Redimensionar a la mascota para que ocupe un buen espacio en el fondo
+        ratio = 550.0 / max(mascota_sin_fondo.width, mascota_sin_fondo.height)
+        new_size = (int(mascota_sin_fondo.width * ratio), int(mascota_sin_fondo.height * ratio))
+        mascota_redimensionada = mascota_sin_fondo.resize(new_size, Image.Resampling.LANCZOS)
+
+        # 6. Calcular posición: Pegar a la mascota centrada y en la parte inferior
+        x = (fondo.width - mascota_redimensionada.width) // 2
+        y = fondo.height - mascota_redimensionada.height - 40 # 40px de margen inferior
+
+        # Pegar la mascota usando su propia máscara de transparencia
+        fondo.paste(mascota_redimensionada, (x, y), mascota_redimensionada)
+
+        # 7. Guardar el fotomontaje final
+        final_img = fondo.convert("RGB")
+        final_img.save(output_path, "JPEG", quality=95)
+        
+        print("¡Composición local terminada con éxito!")
+        return True
 
     except Exception as e:
-        print(f"Error al conectar con Replicate API: {str(e)}")
-        # Fallback de respaldo por seguridad para que la app no colapse si falla el internet o el token
+        print(f"--- ERROR EN COMPOSICIÓN LOCAL: {str(e)} ---")
+        # Respaldo en caso de error crítico
         shutil.copyfile(input_path, output_path)
         return False
-    
 
+    
 # 1. Crear la instancia única de Flask
 app = Flask(__name__)
 
@@ -857,10 +867,7 @@ def enviar_alerta_geocerca():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
-def ejecutar_ia_propia(input_path, output_path, efecto):
-    import shutil
-    shutil.copyfile(input_path, output_path) 
-    return True 
+
 
 
 @app.route('/api/subir_y_procesar_ia', methods=['POST'])
