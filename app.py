@@ -1077,7 +1077,46 @@ def comprar_producto():
             return jsonify({"status": "error", "message": "Producto agotado"}), 400
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
-    
+
+@app.route('/api/actualizar_producto/<int:id_producto>', methods=['POST'])
+def actualizar_producto(id_producto):
+    try:
+        nombre = request.form.get('nombre_producto')
+        descripcion = request.form.get('descripcion')
+        precio = request.form.get('precio')
+        cantidad = request.form.get('cantidad')
+        nombre_proveedor = request.form.get('nombre_proveedor')
+        contacto_proveedor = request.form.get('contacto_proveedor')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Actualizar campos de texto básicos
+        query = """
+            UPDATE productos_vendedor 
+            SET nombre_producto = %s, descripcion = %s, precio = %s, cantidad = %s, nombre_proveedor = %s, contacto_proveedor = %s
+            WHERE id_producto = %s
+        """
+        cursor.execute(query, (nombre, descripcion, precio, cantidad, nombre_proveedor, contacto_proveedor, id_producto))
+
+        # Actualizar imágenes solo si se adjuntaron nuevas
+        for i in range(1, 6):
+            file = request.files.get(f'imagen_{i}')
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                
+                cursor.execute(f"UPDATE productos_vendedor SET imagen_{i} = %s WHERE id_producto = %s", (filename, id_producto))
+
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"status": "success", "message": "Producto actualizado correctamente"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

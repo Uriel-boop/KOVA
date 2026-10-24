@@ -55,7 +55,7 @@
         </div>
 
         <div class="card">
-            <h3>Mis productos</h3>
+            <h3>Mis productos (Gestión e Inventario)</h3>
             <div id="lista-detallada" style="margin-top: 15px;">No hay ningún producto en la lista.</div>
         </div>
     </div>
@@ -67,20 +67,20 @@
             <form id="form-producto" onsubmit="guardarProducto(event)" style="margin-top: 15px;">
                 <div class="form-group">
                     <label>Nombre del producto</label>
-                    <input type="text" id="nombre_producto" name="nombre_producto" required placeholder="Ingresa el nombre completo de tu producto">
+                    <input type="text" id="nombre_producto" name="nombre_producto" required placeholder="Nombre del producto">
                 </div>
                 <div class="form-group">
-                    <label>Descripción de tu producto</label>
-                    <textarea id="descripcion" name="descripcion" rows="3" required placeholder="Detalla características, caducidad, etc."></textarea>
+                    <label>Descripción</label>
+                    <textarea id="descripcion" name="descripcion" rows="3" required placeholder="Detalles, caducidad, etc."></textarea>
                 </div>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                     <div class="form-group">
                         <label>Precio (MXN)</label>
-                        <input type="number" step="0.01" id="precio" name="precio" required placeholder="En pesos mexicanos">
+                        <input type="number" step="0.01" id="precio" name="precio" required>
                     </div>
                     <div class="form-group">
-                        <label>Cantidad de producto (piezas)</label>
-                        <input type="number" id="cantidad" name="cantidad" required placeholder="Ej: 10, 20">
+                        <label>Cantidad (Piezas / Stock)</label>
+                        <input type="number" id="cantidad" name="cantidad" required>
                     </div>
                 </div>
                 <div class="form-group">
@@ -95,15 +95,65 @@
                 </div>
                 <div class="form-group">
                     <label>Nombre del proveedor</label>
-                    <input type="text" id="nombre_proveedor" name="nombre_proveedor" placeholder="Nombre completo de proveedor">
+                    <input type="text" id="nombre_proveedor" name="nombre_proveedor">
                 </div>
                 <div class="form-group">
                     <label>Contacto del proveedor</label>
-                    <input type="text" id="contacto_proveedor" name="contacto_proveedor" placeholder="Teléfono o correo">
+                    <input type="text" id="contacto_proveedor" name="contacto_proveedor">
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 20px;">
-                    <button type="submit" class="btn-kova" style="flex: 1; margin:0;">Guardar en la base de datos</button>
+                    <button type="submit" class="btn-kova" style="flex: 1; margin:0;">Guardar</button>
                     <button type="button" onclick="cerrarModalRegistro()" class="btn-kova" style="flex: 1; margin:0; background: var(--border-color); color: var(--body-text);">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Editar Producto -->
+    <div id="modal-editar" class="modal">
+        <div class="modal-content">
+            <h3>Editar producto e inventario</h3>
+            <form id="form-editar" onsubmit="actualizarProducto(event)" style="margin-top: 15px;">
+                <input type="hidden" id="edit_id_producto">
+                <div class="form-group">
+                    <label>Nombre del producto</label>
+                    <input type="text" id="edit_nombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Descripción</label>
+                    <textarea id="edit_descripcion" rows="3" required></textarea>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                    <div class="form-group">
+                        <label>Precio (MXN)</label>
+                        <input type="number" step="0.01" id="edit_precio" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cantidad (Stock)</label>
+                        <input type="number" id="edit_cantidad" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Actualizar imágenes (Opcional)</label>
+                    <div class="imagenes-grid">
+                        <div class="img-slot" id="edit-slot-1">Img 1<input type="file" name="imagen_1" accept="image/*" onchange="previewEditSlot(this, 1)"></div>
+                        <div class="img-slot" id="edit-slot-2">Img 2<input type="file" name="imagen_2" accept="image/*" onchange="previewEditSlot(this, 2)"></div>
+                        <div class="img-slot" id="edit-slot-3">Img 3<input type="file" name="imagen_3" accept="image/*" onchange="previewEditSlot(this, 3)"></div>
+                        <div class="img-slot" id="edit-slot-4">Img 4<input type="file" name="imagen_4" accept="image/*" onchange="previewEditSlot(this, 4)"></div>
+                        <div class="img-slot" id="edit-slot-5">Img 5<input type="file" name="imagen_5" accept="image/*" onchange="previewEditSlot(this, 5)"></div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Nombre del proveedor</label>
+                    <input type="text" id="edit_nombre_proveedor">
+                </div>
+                <div class="form-group">
+                    <label>Contacto del proveedor</label>
+                    <input type="text" id="edit_contacto_proveedor">
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button type="submit" class="btn-kova" style="flex: 1; margin:0;">Actualizar Cambios</button>
+                    <button type="button" onclick="cerrarModalEdicion()" class="btn-kova" style="flex: 1; margin:0; background: var(--border-color); color: var(--body-text);">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -111,17 +161,19 @@
 
     <script>
         let usuarioActual = null;
+        let productosGlobales = [];
 
         document.addEventListener('DOMContentLoaded', function() {
-            usuarioActual = JSON.parse(localStorage.getItem('kova_current_user') || localStorage.getItem('user') || '{}');
-            if(usuarioActual.nombre_completo || usuarioActual.nombre) {
-                document.getElementById('saludo-vendedor').textContent = `Hola, "${usuarioActual.nombre_completo || usuarioActual.nombre}", Bienvenido`;
+            usuarioActual = JSON.parse(localStorage.getItem('kova_current_user') || '{}');
+            if(usuarioActual.nombre_completo) {
+                document.getElementById('saludo-vendedor').textContent = `Hola, "${usuarioActual.nombre_completo}", Bienvenido`;
             }
             cargarMisProductos();
         });
 
         function abrirModalRegistro() { document.getElementById('modal-producto').style.display = 'flex'; }
         function cerrarModalRegistro() { document.getElementById('modal-producto').style.display = 'none'; }
+        function cerrarModalEdicion() { document.getElementById('modal-editar').style.display = 'none'; }
 
         function previewSlot(input, num) {
             if (input.files && input.files[0]) {
@@ -137,10 +189,24 @@
             }
         }
 
+        function previewEditSlot(input, num) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    let slot = document.getElementById(`edit-slot-${num}`);
+                    slot.style.backgroundImage = `url(${e.target.result})`;
+                    slot.style.backgroundSize = 'cover';
+                    slot.style.backgroundPosition = 'center';
+                    slot.textContent = '';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
         function guardarProducto(e) {
             e.preventDefault();
             const formData = new FormData(document.getElementById('form-producto'));
-            formData.append('id_vendedor', usuarioActual.id_usuario || usuarioActual.id || 1);
+            formData.append('id_vendedor', usuarioActual.id_usuario || 1);
 
             fetch('http://127.0.0.1:5000/api/registrar_producto', {
                 method: 'POST',
@@ -161,8 +227,7 @@
                 } else {
                     alert("Error: " + data.message);
                 }
-            })
-            .catch(err => alert("Error de conexión con el servidor."));
+            });
         }
 
         function cargarMisProductos() {
@@ -170,8 +235,10 @@
             .then(res => res.json())
             .then(data => {
                 if(data.status === 'success' && data.productos.length > 0) {
+                    productosGlobales = data.productos;
                     let resumidoHtml = '';
                     let detalladoHtml = '';
+                    
                     data.productos.forEach((p, idx) => {
                         resumidoHtml += `<div>${idx + 1} - ${p.nombre_producto}</div>`;
                         
@@ -179,7 +246,7 @@
                         for(let i=1; i<=5; i++) {
                             let imgName = p[`imagen_${i}`];
                             if(imgName) {
-                                imgsHtml += `<div style="border:1px solid #ddd; width:45px; height:45px; border-radius:4px; overflow:hidden;"><img src="/static/uploads/${imgName}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                                imgsHtml += `<div style="border:1px solid #ddd; width:45px; height:45px; border-radius:4px; overflow:hidden;"><img src="http://127.0.0.1:5000/static/uploads/${imgName}" style="width:100%; height:100%; object-fit:cover;"></div>`;
                             }
                         }
 
@@ -192,12 +259,51 @@
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Stock disponible:</strong> ${p.cantidad} piezas</div>
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Descripción:</strong> ${p.descripcion}</div>
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Proveedor:</strong> ${p.nombre_proveedor || 'N/A'} (${p.contacto_proveedor || 'Sin contacto'})</div>
-                                <div style="display:flex; gap:6px; margin-top:8px;">${imgsHtml}</div>
+                                <div style="display:flex; gap:6px; margin-top:8px; align-items:center;">
+                                    ${imgsHtml}
+                                    <button onclick="abrirEditar(${p.id_producto})" style="margin-left:auto; background:var(--primary-accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-pen"></i> Editar</button>
+                                </div>
                             </div>
                         `;
                     });
                     document.getElementById('lista-resumida').innerHTML = resumidoHtml;
                     document.getElementById('lista-detallada').innerHTML = detalladoHtml;
+                }
+            });
+        }
+
+        function abrirEditar(idProducto) {
+            let p = productosGlobales.find(item => item.id_producto === idProducto);
+            if(!p) return;
+
+            document.getElementById('edit_id_producto').value = p.id_producto;
+            document.getElementById('edit_nombre').value = p.nombre_producto;
+            document.getElementById('edit_descripcion').value = p.descripcion;
+            document.getElementById('edit_precio').value = p.precio;
+            document.getElementById('edit_cantidad').value = p.cantidad;
+            document.getElementById('edit_nombre_proveedor').value = p.nombre_proveedor || '';
+            document.getElementById('edit_contacto_proveedor').value = p.contacto_proveedor || '';
+
+            document.getElementById('modal-editar').style.display = 'flex';
+        }
+
+        function actualizarProducto(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit_id_producto').value;
+            const formData = new FormData(document.getElementById('form-editar'));
+
+            fetch(`http://127.0.0.1:5000/api/actualizar_producto/${id}`, {
+                method: 'POST',
+                body: formData
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    alert("¡Producto actualizado correctamente!");
+                    cerrarModalEdicion();
+                    cargarMisProductos();
+                } else {
+                    alert("Error: " + data.message);
                 }
             });
         }
