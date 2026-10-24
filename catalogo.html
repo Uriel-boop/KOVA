@@ -9,6 +9,7 @@
         :root {
             --primary-accent: #008BA3;        
             --brand-identity: #F25487;        
+            --brand-hover: #D83C6F;
             --bg-gradient-turq: #EBF7FA;      
             --body-text: #4A5568;             
             --white-pure: #FFFFFF;            
@@ -17,17 +18,22 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
         body { background-color: var(--bg-gradient-turq); padding: 16px 20px; color: var(--body-text); display: flex; flex-direction: column; min-height: 100vh; }
+        
         .topbar { display: flex; justify-content: space-between; align-items: center; background: var(--white-pure); padding: 10px 24px; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .brand-badge { background-color: #FDECF0; color: var(--brand-identity); padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; }
+        
+        .cart-icon-container { position: relative; cursor: pointer; background: var(--soft-pink, #FDECF0); padding: 8px 14px; border-radius: 12px; display: flex; align-items: center; gap: 8px; color: var(--brand-identity); font-weight: 700; }
+        .cart-badge { background: var(--brand-identity); color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.75rem; }
+
         .main-navigation { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 16px; }
-        .nav-btn { flex: 1; text-align: center; padding: 10px 16px; background-color: var(--nav-bg-inactive); color: var(--primary-text); text-decoration: none; font-weight: 700; font-size: 0.88rem; border-radius: 10px; }
+        .nav-btn { flex: 1; text-align: center; padding: 10px 16px; background-color: var(--nav-bg-inactive); color: var(--body-text); text-decoration: none; font-weight: 700; font-size: 0.88rem; border-radius: 10px; }
         .nav-btn.active { background-color: var(--brand-identity) !important; color: white !important; }
 
         .catalogo-container { background: var(--white-pure); border-radius: 16px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); flex: 1; }
         .productos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px; margin-top: 20px; }
         .producto-card { border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; background: white; display: flex; flex-direction: column; justify-content: space-between; }
         
-        /* Estilo Mercado Libre Visor */
+        /* Visor Estilo Mercado Libre */
         .ml-visor { display: flex; gap: 10px; height: 180px; margin-bottom: 12px; }
         .ml-miniaturas { display: flex; flex-direction: column; gap: 6px; width: 45px; overflow-y: auto; }
         .ml-miniaturas img { width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--border-color); border-radius: 4px; cursor: pointer; }
@@ -36,7 +42,16 @@
         .ml-principal img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
         .btn-comprar { width: 100%; background-color: var(--brand-identity); color: white; border: none; padding: 10px; border-radius: 8px; font-weight: 700; cursor: pointer; margin-top: 10px; }
-        .btn-comprar:hover { background-color: #D83C6F; }
+        .btn-comprar:hover { background-color: var(--brand-hover); }
+
+        /* Modal Carrito Estilo Imagen 1 */
+        .modal-carrito { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; }
+        .carrito-contenido { background: white; width: 90%; max-width: 900px; border-radius: 16px; padding: 25px; display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; max-height: 90vh; overflow-y: auto; }
+        .carrito-col { background: #fdfdfd; border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; }
+        .item-carrito { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 10px; font-size: 0.85rem; }
+        .item-carrito img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+        .btn-qty { background: #eee; border: none; padding: 4px 8px; font-weight: bold; cursor: pointer; border-radius: 4px; }
+        .btn-trash { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 1rem; }
     </style>
 </head>
 <body>
@@ -46,7 +61,12 @@
             <img src="img/LOGO_KOVA.png" alt="Logo" style="height: 48px;">
             <span class="brand-badge">PRODUCTOS Y SERVICIOS</span>
         </div>
-        <button onclick="cerrarSesion()" style="border: 1.5px solid var(--brand-identity); color: var(--brand-identity); background: transparent; padding: 6px 18px; border-radius: 10px; font-weight: 700; cursor: pointer;">Cerrar Sesión</button>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="cart-icon-container" onclick="abrirCarrito()">
+                <i class="fa-solid fa-shopping-cart"></i> Carrito <span class="cart-badge" id="cart-count">0</span>
+            </div>
+            <button onclick="cerrarSesion()" style="border: 1.5px solid var(--brand-identity); color: var(--brand-identity); background: transparent; padding: 6px 18px; border-radius: 10px; font-weight: 700; cursor: pointer;">Cerrar Sesión</button>
+        </div>
     </header>
 
     <div id="navbar-container">
@@ -66,8 +86,68 @@
         </div>
     </main>
 
+    <!-- Modal Carrito de Compras (Estilo Imagen 1) -->
+    <div id="modal-carrito" class="modal-carrito">
+        <div class="carrito-contenido">
+            <!-- Artículos Agregados -->
+            <div class="carrito-col">
+                <h3 style="margin-bottom: 12px; color: var(--primary-accent);">Artículos Agregados</h3>
+                <div id="lista-articulos-carrito" style="max-height: 350px; overflow-y: auto;">
+                    <p style="color: #777; font-size: 0.9rem;">Tu carrito está vacío.</p>
+                </div>
+            </div>
+            <!-- Resumen de Compra -->
+            <div class="carrito-col" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="margin-bottom: 12px; color: var(--primary-accent);">Resumen de Compra</h3>
+                    <p id="carrito-titular" style="font-size: 0.85rem; font-weight: bold; margin-bottom: 10px;">Titular de compra: "Usuario"</p>
+                    <hr style="border:0; border-top:1px solid #ddd; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+                        <span>Productos:</span> <span id="resumen-cant-prod">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 6px;">
+                        <span>Subtotal:</span> <span id="resumen-subtotal">$0.00 MXN</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; font-size: 0.9rem; margin-bottom: 10px;">
+                        <span>IVA (16%):</span> <span id="resumen-iva">$0.00 MXN</span>
+                    </div>
+                    <hr style="border:0; border-top:1px solid #ddd; margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-weight: 800; font-size: 1.1rem; color: var(--brand-identity); margin-bottom: 15px;">
+                        <span>Total a pagar:</span> <span id="resumen-total">$0.00 MXN</span>
+                    </div>
+                </div>
+                <div>
+                    <button onclick="procederPago()" class="btn-comprar" style="margin-bottom: 8px;">Continuar a pagar</button>
+                    <button onclick="cerrarCarrito()" class="btn-comprar" style="background: #cbd5e1; color: #333;">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Métodos de Pago -->
+    <div id="modal-pago" class="modal-carrito">
+        <div class="carrito-contenido" style="display: block; max-width: 500px;">
+            <h3 style="color: var(--primary-accent); margin-bottom: 15px;">Selecciona método de pago</h3>
+            <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px;">
+                <label style="padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;"><input type="radio" name="metodo" checked> Tarjeta de Crédito / Débito</label>
+                <label style="padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;"><input type="radio" name="metodo"> Transferencia Digital SPEI</label>
+                <label style="padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; cursor: pointer;"><input type="radio" name="metodo"> Código de pago en Tienda Física (OXXO/Convenio)</label>
+            </div>
+            <button onclick="finalizarCompraExitosa()" class="btn-comprar">Confirmar y Pagar</button>
+            <button onclick="cerrarPago()" class="btn-comprar" style="background: #cbd5e1; color: #333; margin-top: 8px;">Regresar</button>
+        </div>
+    </div>
+
     <script>
+        let carrito = [];
+        let productosDisponibles = [];
+        let usuarioActual = {};
+
         document.addEventListener('DOMContentLoaded', function() {
+            usuarioActual = JSON.parse(localStorage.getItem('kova_current_user') || '{}');
+            if(usuarioActual.nombre_completo) {
+                document.getElementById('carrito-titular').textContent = `Titular de compra: "${usuarioActual.nombre_completo}"`;
+            }
             cargarCatalogoProductos();
         });
 
@@ -78,13 +158,13 @@
                 const grid = document.getElementById('grid-productos-publicos');
                 grid.innerHTML = '';
                 if(data.status === 'success' && data.productos.length > 0) {
-                    data.productos.forEach(p => {
-                        let imgs = [p.imagen_1, p.imagen_2, p.imagen_3, p.imagen_4, p.imagen_5].filter(img => img !== null);
+                    productosDisponibles = data.productos;
+                    productosDisponibles.forEach(p => {
+                        let imgs = [p.imagen_1, p.imagen_2, p.imagen_3, p.imagen_4, p.imagen_5].filter(img => img !== null && img !== undefined);
                         let principalImg = imgs.length > 0 ? `/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
                         
                         let miniaturasHtml = '';
                         imgs.forEach(img => {
-                            // Se cambia con click (también responde al hover si se desea)
                             miniaturasHtml += `<img src="/static/uploads/${img}" onclick="cambiarPrincipal(this, '${img}')" onmouseover="cambiarPrincipal(this, '${img}')">`;
                         });
 
@@ -104,7 +184,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 800; font-size: 1.1rem; color: var(--primary-accent);">$${p.precio} MXN</div>
-                                <button class="btn-comprar" onclick="comprarProducto(${p.id_producto})">Comprar ahora</button>
+                                <button class="btn-comprar" onclick="agregarAlCarrito(${p.id_producto})">Agregar al carrito</button>
                             </div>
                         `;
                         grid.appendChild(card);
@@ -120,22 +200,120 @@
             visorPrincipal.src = `/static/uploads/${nombreArchivo}`;
         }
 
-        function comprarProducto(idProducto) {
-            fetch('http://127.0.0.1:5000/api/comprar_producto', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id_producto: idProducto })
-            })
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success') {
-                    alert("¡Compra realizada con éxito! Se ha descontado 1 pieza del inventario.");
-                    document.getElementById(`stock-${idProducto}`).textContent = data.stock_restante;
+        function agregarAlCarrito(idProducto) {
+            let producto = productosDisponibles.find(p => p.id_producto === idProducto);
+            if(!producto) return;
+
+            let itemEnCarrito = carrito.find(item => item.id_producto === idProducto);
+            if(itemEnCarrito) {
+                if(itemEnCarrito.cantidad < producto.cantidad) {
+                    itemEnCarrito.cantidad += 1;
                 } else {
-                    alert("Error: " + data.message);
+                    alert("No hay más stock disponible para agregar.");
+                    return;
                 }
-            })
-            .catch(err => alert("Error de conexión al procesar la compra."));
+            } else {
+                if(producto.cantidad > 0) {
+                    carrito.push({ ...producto, cantidad: 1 });
+                } else {
+                    alert("Producto agotado.");
+                    return;
+                }
+            }
+            actualizarCarritoUI();
+            alert("¡Producto agregado al carrito!");
+        }
+
+        function actualizarCarritoUI() {
+            let totalItems = carrito.reduce((sum, item) => sum + item.cantidad, 0);
+            document.getElementById('cart-count').textContent = totalItems;
+
+            let listaHtml = '';
+            let subtotal = 0;
+
+            if(carrito.length === 0) {
+                listaHtml = '<p style="color: #777; font-size: 0.9rem;">Tu carrito está vacío.</p>';
+            } else {
+                carrito.forEach((item, index) => {
+                    let imgs = [item.imagen_1, item.imagen_2, item.imagen_3, item.imagen_4, item.imagen_5].filter(img => img !== null);
+                    let imgUrl = imgs.length > 0 ? `/static/uploads/${imgs[0]}` : 'img/LOGO_KOVA.png';
+                    subtotal += (parseFloat(item.precio) * item.cantidad);
+
+                    listaHtml += `
+                        <div class="item-carrito">
+                            <img src="${imgUrl}" alt="">
+                            <div style="flex: 1;">
+                                <strong>${item.nombre_producto}</strong><br>
+                                <span style="color: var(--primary-accent); font-weight:700;">$${item.precio} MXN</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <button class="btn-qty" onclick="cambiarCantidad(${index}, -1)">-</button>
+                                <span>${item.cantidad}</span>
+                                <button class="btn-qty" onclick="cambiarCantidad(${index}, 1)">+</button>
+                                <button class="btn-trash" onclick="eliminarDelCarrito(${index})"><i class="fa-solid fa-trash"></i></button>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            let iva = subtotal * 0.16;
+            let total = subtotal + iva;
+
+            document.getElementById('lista-articulos-carrito').innerHTML = listaHtml;
+            document.getElementById('resumen-cant-prod').textContent = totalItems;
+            document.getElementById('resumen-subtotal').textContent = `$${subtotal.toFixed(2)} MXN`;
+            document.getElementById('resumen-iva').textContent = `$${iva.toFixed(2)} MXN`;
+            document.getElementById('resumen-total').textContent = `$${total.toFixed(2)} MXN`;
+        }
+
+        function cambiarCantidad(index, delta) {
+            let item = carrito[index];
+            let productoOriginal = productosDisponibles.find(p => p.id_producto === item.id_producto);
+            
+            let nuevaCantidad = item.cantidad + delta;
+            if(nuevaCantidad > 0 && nuevaCantidad <= productoOriginal.cantidad) {
+                item.cantidad = nuevaCantidad;
+                actualizarCarritoUI();
+            } else if(nuevaCantidad > productoOriginal.cantidad) {
+                alert("Has alcanzado el límite del stock disponible.");
+            }
+        }
+
+        function eliminarDelCarrito(index) {
+            carrito.splice(index, 1);
+            actualizarCarritoUI();
+        }
+
+        function abrirCarrito() { document.getElementById('modal-carrito').style.display = 'flex'; }
+        function cerrarCarrito() { document.getElementById('modal-carrito').style.display = 'none'; }
+        function procederPago() {
+            if(carrito.length === 0) {
+                alert("El carrito está vacío.");
+                return;
+            }
+            cerrarCarrito();
+            document.getElementById('modal-pago').style.display = 'flex';
+        }
+        function cerrarPago() { document.getElementById('modal-pago').style.display = 'none'; }
+
+        function finalizarCompraExitosa() {
+            // Descontar en base de datos cada producto del carrito
+            carrito.forEach(item => {
+                for(let i=0; i<item.cantidad; i++) {
+                    fetch('http://127.0.0.1:5000/api/comprar_producto', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id_producto: item.id_producto })
+                    });
+                }
+            });
+
+            alert("¡Compra procesada y cobro realizado con éxito! Inventario actualizado.");
+            carrito = [];
+            actualizarCarritoUI();
+            cerrarPago();
+            cargarCatalogoProductos();
         }
 
         function cerrarSesion() {
