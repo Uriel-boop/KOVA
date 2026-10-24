@@ -990,6 +990,95 @@ def actualizar_foto_perfil_ia():
 
     return jsonify({'status': 'success', 'message': 'Foto de perfil actualizada'}), 200
 
+
+# --- 1. REGISTRAR PRODUCTO ---
+@app.route('/api/registrar_producto', methods=['POST'])
+def registrar_producto():
+    try:
+        id_vendedor = request.form.get('id_vendedor')
+        nombre = request.form.get('nombre_producto')
+        descripcion = request.form.get('descripcion')
+        precio = request.form.get('precio')
+        cantidad = request.form.get('cantidad')
+        nombre_proveedor = request.form.get('nombre_proveedor')
+        contacto_proveedor = request.form.get('contacto_proveedor')
+
+        imgs = []
+        for i in range(1, 6):
+            file = request.files.get(f'imagen_{i}')
+            if file and file.filename != '':
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                file.save(filepath)
+                imgs.append(filename)
+            else:
+                imgs.append(None)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """
+            INSERT INTO productos_vendedor 
+            (id_vendedor, nombre_producto, descripcion, precio, cantidad, imagen_1, imagen_2, imagen_3, imagen_4, imagen_5, nombre_proveedor, contacto_proveedor)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        """
+        cursor.execute(query, (
+            id_vendedor, nombre, descripcion, precio, cantidad, 
+            imgs[0], imgs[1], imgs[2], imgs[3], imgs[4], 
+            nombre_proveedor, contacto_proveedor
+        ))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        return jsonify({"status": "success", "message": "Producto registrado correctamente"}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# --- 2. OBTENER PRODUCTOS ---
+@app.route('/api/productos', methods=['GET'])
+def obtener_productos():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT * FROM productos_vendedor ORDER BY fecha_registro DESC")
+        productos = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "success", "productos": productos}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
+# --- 3. ACTUALIZAR O COMPRAR PRODUCTO (DESCONTAR STOCK) ---
+@app.route('/api/comprar_producto', methods=['POST'])
+def comprar_producto():
+    try:
+        data = request.get_json() or {}
+        id_producto = data.get('id_producto')
+        
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute("SELECT cantidad FROM productos_vendedor WHERE id_producto = %s", (id_producto,))
+        prod = cursor.fetchone()
+        
+        if not prod:
+            return jsonify({"status": "error", "message": "Producto no encontrado"}), 404
+            
+        stock_actual = int(prod['cantidad'])
+        if stock_actual > 0:
+            nuevo_stock = stock_actual - 1
+            cursor.execute("UPDATE productos_vendedor SET cantidad = %s WHERE id_producto = %s", (nuevo_stock, id_producto))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            return jsonify({"status": "success", "message": "Compra realizada con éxito", "stock_restante": nuevo_stock}), 200
+        else:
+            cursor.close()
+            conn.close()
+            return jsonify({"status": "error", "message": "Producto agotado"}), 400
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+    
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
     
