@@ -245,8 +245,8 @@
                         let imgsHtml = '';
                         for(let i=1; i<=5; i++) {
                             let imgName = p[`imagen_${i}`];
-                            if(imgName && imgName !== 'None' && imgName !== '') {
-                                imgsHtml += `<div style="border:1px solid #ddd; width:45px; height:45px; border-radius:4px; overflow:hidden;"><img src="http://127.0.0.1:5000/static/uploads/${imgName}" style="width:100%; height:100%; object-fit:cover;"></div>`;
+                            if(imgName && imgName !== 'None' && imgName !== '' && imgName !== null) {
+                                imgsHtml += `<div style="border:1px solid #ddd; width:45px; height:45px; border-radius:4px; overflow:hidden;"><img src="http://127.0.0.1:5000/static/uploads/${imgName}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='img/LOGO_KOVA.png'"></div>`;
                             }
                         }
 
@@ -260,7 +260,7 @@
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Descripción:</strong> ${p.descripcion}</div>
                                 <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Proveedor:</strong> ${p.nombre_proveedor || 'N/A'} (${p.contacto_proveedor || 'Sin contacto'})</div>
                                 <div style="display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;">
-                                    ${imgsHtml}
+                                    ${imgsHtml !== '' ? imgsHtml : '<span style="font-size:0.75rem; color:#999;">Sin imágenes adjuntas</span>'}
                                     <button onclick="abrirEditar(${p.id_producto})" style="margin-left:auto; background:var(--primary-accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-pen"></i> Editar</button>
                                 </div>
                             </div>
@@ -284,7 +284,6 @@
             document.getElementById('edit_nombre_proveedor').value = p.nombre_proveedor || '';
             document.getElementById('edit_contacto_proveedor').value = p.contacto_proveedor || '';
 
-            // Limpiar slots de edición visuales
             for(let i=1; i<=5; i++) {
                 let slot = document.getElementById(`edit-slot-${i}`);
                 slot.style.backgroundImage = '';
