@@ -513,6 +513,13 @@
         }
 
         mostrarCatalogo('productos');
+
+        function cerrarSesion() {
+            localStorage.removeItem('kova_current_user');
+            alert("Has cerrado sesión exitosamente.");
+            window.location.href = "index.html";
+        }
+
     </script>  
 </body>
 </html>

@@ -703,6 +703,13 @@ function enviarAlertaServidor(fecha, hora) {
     }).then(res => res.json()).catch(err => console.log("Error al notificar:", err));
 }
 
+function cerrarSesion() {
+            localStorage.removeItem('kova_current_user');
+            alert("Has cerrado sesión exitosamente.");
+            window.location.href = "index.html";
+        }
+
+
     </script>
 </body>
 </html>
