@@ -970,7 +970,71 @@ def eliminar_producto(id_producto):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+# Ruta para guardar un nuevo servicio
+@app.route('/api/crear_servicio', methods=['POST'])
+def crear_servicio():
+    try:
+        id_usuario = request.form.get('id_usuario')
+        tipo_servicio = request.form.get('tipo_servicio')
+        nombre_prestador = request.form.get('nombre_prestador')
+        edad = request.form.get('edad')
+        descripcion = request.form.get('descripcion')
+        dias_servicio = request.form.get('dias_servicio')
+        precio = request.form.get('precio')
+        lugar_servicio = request.form.get('lugar_servicio')
+        ubicacion = request.form.get('ubicacion', '') # Puede estar vacío si no es sucursal
+        contacto = request.form.get('contacto')
 
+        # Procesar imágenes (igual que en productos)
+        rutas_imagenes = []
+        for img_key in ['imagen1', 'imagen2']:
+            if img_key in request.files:
+                file = request.files[img_key]
+                if file and file.filename != '':
+                    filename = secure_filename(f"{datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}")
+                    filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+                    file.save(filepath)
+                    rutas_imagenes.append(filename)
+                else:
+                    rutas_imagenes.append(None)
+            else:
+                rutas_imagenes.append(None)
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """INSERT INTO servicios (id_usuario, tipo_servicio, nombre_prestador, edad, descripcion, dias_servicio, precio, lugar_servicio, ubicacion, contacto, imagen1, imagen2) 
+                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
+        valores = (id_usuario, tipo_servicio, nombre_prestador, edad, descripcion, dias_servicio, precio, lugar_servicio, ubicacion, contacto, rutas_imagenes[0], rutas_imagenes[1])
+        
+        cursor.execute(query, valores)
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True, "message": "Servicio registrado correctamente"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
+# Ruta para obtener los servicios del prestador logueado
+@app.route('/api/mis_servicios/<int:id_usuario>', methods=['GET'])
+def mis_servicios(id_usuario):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM servicios WHERE id_usuario = %s ORDER BY fecha_registro DESC", (id_usuario,))
+    servicios = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(servicios)
+
+# Ruta pública para el catálogo de servicios
+@app.route('/api/catalogo_servicios', methods=['GET'])
+def catalogo_servicios():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM servicios ORDER BY fecha_registro DESC")
+    servicios = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return jsonify(servicios)
 
 if __name__ == "__main__":
     app.run(debug=True, port=5000)

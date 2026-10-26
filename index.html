@@ -774,12 +774,14 @@
                 // Guardar los datos del usuario logueado en LocalStorage
                 localStorage.setItem('kova_current_user', JSON.stringify(data.user));
                 
-                // Obtener el tipo de usuario y pasarlo a minúsculas para evitar errores de mayúsculas/minúsculas
+                // Obtener el tipo de usuario y pasarlo a minúsculas
                 const tipoUsuario = (data.tipo_usuario || (data.user && data.user.tipo_usuario) || '').toLowerCase();
 
-                // Redireccionar si el rol incluye la palabra 'vendedor'
+                // Redireccionar según el rol
                 if (tipoUsuario.includes('vendedor')) {
                     window.location.href = 'vendedor_productos.html';
+                } else if (tipoUsuario.includes('prestador')) {
+                    window.location.href = 'prestador_servicios.html';
                 } else {
                     window.location.href = 'kova_usuarios.html';
                 }

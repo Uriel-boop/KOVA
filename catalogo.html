@@ -79,8 +79,13 @@
 
     <main class="catalogo-container">
         <h1 style="font-size: 1.4rem; color: var(--primary-text);">Insumos y Productos para tu Mascota</h1>
+        <div style="margin-left: 20px; margin-bottom: 20px; display:flex; gap:10px;">
+            <button id="btn-servicios" class="btn-rosa" style="background:transparent; color:#d76ba6; border:1px solid #d76ba6; cursor:pointer;" onclick="mostrarCatalogo('servicios')">Servicios</button>
+            <button id="btn-productos" class="btn-rosa" style="background:#d76ba6; color:white; border:none; cursor:pointer;" onclick="mostrarCatalogo('productos')">Productos</button>
+        </div>
         <div class="productos-grid" id="grid-productos-publicos"></div>
     </main>
+    
 
     <!-- Modal Carrito -->
     <div id="modal-carrito" class="modal-carrito">
@@ -326,6 +331,55 @@
             localStorage.clear();
             window.location.href = 'index.html';
         }
+
+        async function mostrarCatalogo(tipo) {
+            const contenedor = document.getElementById('grid-productos'); // Asumiendo que tu div de tarjetas se llama así
+            contenedor.innerHTML = '<p>Cargando...</p>';
+
+            // Actualizar diseño de botones
+            if (tipo === 'productos') {
+                document.getElementById('btn-productos').style.background = '#d76ba6';
+                document.getElementById('btn-productos').style.color = 'white';
+                document.getElementById('btn-servicios').style.background = 'transparent';
+                document.getElementById('btn-servicios').style.color = '#d76ba6';
+            } else {
+                document.getElementById('btn-servicios').style.background = '#d76ba6';
+                document.getElementById('btn-servicios').style.color = 'white';
+                document.getElementById('btn-productos').style.background = 'transparent';
+                document.getElementById('btn-productos').style.color = '#d76ba6';
+            }
+
+            try {
+                const endpoint = tipo === 'productos' ? '/api/catalogo' : '/api/catalogo_servicios';
+                const res = await fetch(`${API_URL}${endpoint}`);
+                const datos = await res.json();
+                
+                contenedor.innerHTML = '';
+                
+                datos.forEach(item => {
+                    const imagenSrc = item.imagen1 ? `${API_URL}/static/uploads/${item.imagen1}` : 'img/placeholder.png';
+                    const titulo = tipo === 'productos' ? item.nombre_producto : item.tipo_servicio;
+                    const desc = tipo === 'productos' ? item.descripcion : `Prestador: ${item.nombre_prestador} | ${item.lugar_servicio}`;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'tarjeta';
+                    card.innerHTML = `
+                        <img src="${imagenSrc}" style="width:100%; height:200px; object-fit:cover; border-radius:10px;">
+                        <h4>${titulo}</h4>
+                        <p style="color:gray; font-size:12px;">${desc}</p>
+                        <h3 style="color:teal;">$${item.precio} MXN</h3>
+                        <button class="btn-rosa" style="width:100%;">Agregar al carrito</button>
+                    `;
+                    contenedor.appendChild(card);
+                });
+            } catch(e) {
+                console.error("Error al cargar el catálogo:", e);
+                contenedor.innerHTML = '<p>Error al cargar la información.</p>';
+            }
+        }
+
+        // Cargar productos por defecto al abrir el catálogo
+        mostrarCatalogo('productos');
     </script>
 </body>
 </html>
