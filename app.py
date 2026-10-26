@@ -39,20 +39,22 @@ def ejecutar_ia_propia(input_path, output_path, efecto):
         # Convertir los bytes resultantes a una imagen manipulable con Pillow
         mascota_sin_fondo = Image.open(io.BytesIO(output_data)).convert("RGBA")
 
-        # 3. Determinar qué fondo usar según el efecto
+        # 3. Determinar qué fondo usar (Actualizado con los nombres cortos del frontend)
         base_dir = os.path.dirname(os.path.abspath(__file__))
         fondos_dir = os.path.join(base_dir, 'static', 'fondos')
 
-        if "Verano" in efecto:
+        efecto_lower = efecto.lower()
+
+        if "verano" in efecto_lower or "playa" in efecto_lower:
             fondo_path = os.path.join(fondos_dir, "fondo_verano.jpg")
-        elif "Bambi" in efecto:
+        elif "bambi" in efecto_lower or "kimono" in efecto_lower:
             fondo_path = os.path.join(fondos_dir, "fondo_zen.jpg")
-        elif "Nocturno" in efecto:
+        elif "festival" in efecto_lower or "cerezo" in efecto_lower:
             fondo_path = os.path.join(fondos_dir, "fondo_festival.jpg")
-        elif "Tricolor" in efecto:
+        elif "mexico" in efecto_lower or "camiseta" in efecto_lower:
             fondo_path = os.path.join(fondos_dir, "fondo_tricolor.jpg")
         else:
-            fondo_path = os.path.join(fondos_dir, "fondo_verano.jpg") # Fallback por defecto
+            fondo_path = os.path.join(fondos_dir, "fondo_verano.jpg")
 
         # Si no encuentra la imagen de fondo, guarda solo a la mascota sin fondo
         if not os.path.exists(fondo_path):
