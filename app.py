@@ -1025,6 +1025,33 @@ def mis_servicios(id_usuario):
     conn.close()
     return jsonify(servicios)
 
+@app.route('/api/editar_servicio/<int:id_servicio>', methods=['POST'])
+def editar_servicio(id_servicio):
+    try:
+        tipo_servicio = request.form.get('tipo_servicio')
+        nombre_prestador = request.form.get('nombre_prestador')
+        edad = request.form.get('edad')
+        descripcion = request.form.get('descripcion')
+        dias_servicio = request.form.get('dias_servicio')
+        precio = request.form.get('precio')
+        lugar_servicio = request.form.get('lugar_servicio')
+        ubicacion = request.form.get('ubicacion', '')
+        contacto = request.form.get('contacto')
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        query = """UPDATE servicios 
+                   SET tipo_servicio=%s, nombre_prestador=%s, edad=%s, descripcion=%s, 
+                       dias_servicio=%s, precio=%s, lugar_servicio=%s, ubicacion=%s, contacto=%s 
+                   WHERE id_servicio=%s"""
+        cursor.execute(query, (tipo_servicio, nombre_prestador, edad, descripcion, dias_servicio, precio, lugar_servicio, ubicacion, contacto, id_servicio))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"success": True, "message": "Servicio actualizado correctamente"})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+
 # Ruta pública para el catálogo de servicios
 @app.route('/api/catalogo_servicios', methods=['GET'])
 def catalogo_servicios():

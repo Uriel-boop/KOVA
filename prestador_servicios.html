@@ -5,112 +5,94 @@
     <title>KOVA - Prestador de Servicios</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f8f9fa; margin: 0; }
-        .header { display: flex; justify-content: space-between; padding: 20px; background: white; border-bottom: 1px solid #ddd; }
-        .btn-rosa { background: #d76ba6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-        .contenedor-principal { display: flex; gap: 20px; padding: 20px; }
-        .panel { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 50%; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: gray; padding: 30px; border-radius: 10px; width: 80%; max-width: 600px; color: white; }
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 15px 30px; background: white; border-bottom: 2px solid #eee; }
+        .badge-rol { border: 2px solid #d76ba6; color: #d76ba6; padding: 5px 15px; border-radius: 20px; font-weight: bold; }
+        .btn-rosa { background: #d76ba6; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-outline { background: transparent; color: #d76ba6; border: 1px solid #d76ba6; padding: 5px 15px; border-radius: 5px; cursor: pointer; }
+        .contenedor-principal { display: flex; gap: 30px; padding: 30px; }
+        .col-izq { width: 30%; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .col-der { width: 70%; background: white; border-radius: 10px; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+        .lista-item { padding: 12px; border-bottom: 1px solid #eee; cursor: pointer; color: #333; transition: 0.3s; }
+        .lista-item:hover { background: #f0f0f0; border-left: 4px solid #d76ba6; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 30px; border-radius: 10px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
         .form-group { margin-bottom: 15px; }
-        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 8px; margin-top: 5px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
         .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        #div_ubicacion { display: none; } /* Oculto por defecto */
-        .servicio-item { padding: 10px; border-bottom: 1px solid #ddd; cursor: pointer; }
-        .info-valor { color: black; margin-bottom: 15px; }
-        .info-label { color: #d76ba6; margin-bottom: 2px; font-weight: bold; }
-        .img-preview { width: 100px; height: 100px; object-fit: cover; border: 2px solid white; margin-right: 10px; }
+        .acciones-detalle { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-editar { background: #17a2b8; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+        .btn-eliminar { background: #dc3545; color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <img src="img/LOGO_KOVA.png" width="40" alt="KOVA">
-            <span style="border: 2px solid #d76ba6; color: #d76ba6; padding: 5px 15px; border-radius: 20px;">Prestador de Servicios</span>
+        <div style="display:flex; align-items:center; gap:15px;">
+            <img src="img/LOGO_KOVA.png" width="50" alt="KOVA">
+            <span class="badge-rol">Prestador de Servicios</span>
         </div>
-        <button class="btn-rosa" style="background:white; color:#d76ba6; border: 1px solid #d76ba6;" onclick="cerrarSesion()">Cerrar Sesión</button>
+        <button class="btn-outline" onclick="cerrarSesion()">Cerrar Sesión</button>
     </div>
 
-    <h2 style="padding-left: 20px;">Hola, "<span id="nombre-usuario"></span>", Bienvenido</h2>
+    <h2 style="padding: 20px 30px 0;">Hola, "<span id="nombre-usuario"></span>", Bienvenido</h2>
 
     <div class="contenedor-principal">
-        <!-- Lista de Servicios Agregados -->
-        <div class="panel">
-            <h3>Servicios Agregados</h3>
-            <div id="lista-servicios">
-                <p>No hay ningún servicio registrado aún</p>
+        <div class="col-izq">
+            <h3 style="color: #d76ba6; margin-top: 0;">Servicios Agregados</h3>
+            <div id="lista-servicios" style="margin-bottom: 20px; min-height: 200px;">
+                <p style="color:gray;">Cargando servicios...</p>
             </div>
-            <button class="btn-rosa" style="margin-top: 20px;" onclick="document.getElementById('modalServicio').style.display='flex'">Registrar servicio</button>
+            <button class="btn-rosa" style="width: 100%;" onclick="abrirModalCrear()">Registrar servicio</button>
         </div>
 
-        <!-- Detalles del Servicio -->
-        <div class="panel" id="detalle-servicio">
-            <h3>Mis Servicios</h3>
-            <p>No hay ningún servicio en la lista</p>
+        <div class="col-der" id="detalle-servicio">
+            <h3 style="color: #333; margin-top: 0;">Mis Servicios (Gestión)</h3>
+            <p style="color:gray;">Selecciona un servicio de la lista para ver sus detalles.</p>
         </div>
     </div>
 
-    <!-- Modal Formulario -->
+    <!-- Modal Compartido (Crear / Editar) -->
     <div id="modalServicio" class="modal">
         <div class="modal-content">
-            <h2>Agregar Servicio</h2>
+            <h2 id="modal-titulo">Agregar Servicio</h2>
             <form id="form-servicio">
+                <input type="hidden" id="id_servicio_edit">
                 <div class="form-group">
-                    <label>¿Qué tipo de servicio va a prestar?</label>
-                    <input type="text" id="tipo_servicio" placeholder="Ej: Veterinaria, estética..." required>
+                    <label>Tipo de servicio</label>
+                    <input type="text" id="tipo_servicio" required>
                 </div>
                 <div class="grid-2">
-                    <div class="form-group">
-                        <label>Nombre del prestador</label>
-                        <input type="text" id="nombre_prestador" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Edad (Años)</label>
-                        <input type="number" id="edad" min="18" required>
-                    </div>
+                    <div class="form-group"><label>Nombre del prestador</label><input type="text" id="nombre_prestador" required></div>
+                    <div class="form-group"><label>Edad</label><input type="number" id="edad" min="18" required></div>
                 </div>
-                <div class="form-group">
-                    <label>Descripción de tu servicio</label>
-                    <textarea id="descripcion" required></textarea>
+                <div class="form-group"><label>Descripción</label><textarea id="descripcion" required></textarea></div>
+                <div class="grid-2" id="div_imagenes">
+                    <div class="form-group"><label>Imagen 1</label><input type="file" id="imagen1" accept="image/*"></div>
+                    <div class="form-group"><label>Imagen 2</label><input type="file" id="imagen2" accept="image/*"></div>
                 </div>
                 <div class="grid-2">
-                    <div class="form-group">
-                        <label>Imágenes del servicio (2 máx)</label>
-                        <input type="file" id="imagen1" accept="image/*" required>
-                        <input type="file" id="imagen2" accept="image/*">
-                    </div>
-                    <div>
-                        <div class="form-group">
-                            <label>Días de servicio (Ej: Lun-Vie)</label>
-                            <input type="text" id="dias_servicio" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Precio de cobro (MXN)</label>
-                            <input type="number" id="precio" required>
-                        </div>
-                    </div>
+                    <div class="form-group"><label>Días de servicio</label><input type="text" id="dias_servicio" required></div>
+                    <div class="form-group"><label>Precio (MXN)</label><input type="number" id="precio" required></div>
                 </div>
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Lugar del servicio</label>
                         <select id="lugar_servicio" required>
-                            <option value="">Seleccione...</option>
                             <option value="A domicilio">A domicilio</option>
                             <option value="Sucursal física">Sucursal física</option>
                             <option value="Online">Online</option>
                         </select>
                     </div>
-                    <div class="form-group" id="div_ubicacion">
-                        <label>Agregar ubicación</label>
-                        <input type="text" id="ubicacion" placeholder="Dirección completa">
+                    <div class="form-group" id="div_ubicacion" style="display:none;">
+                        <label>Ubicación exacta</label>
+                        <input type="text" id="ubicacion">
                     </div>
                 </div>
-                <div class="form-group">
-                    <label>Contacto (Tel o Correo)</label>
-                    <input type="text" id="contacto" required>
-                </div>
+                <div class="form-group"><label>Contacto</label><input type="text" id="contacto" required></div>
+                
                 <div style="display:flex; justify-content: space-between; margin-top:20px;">
-                    <button type="submit" class="btn-rosa" style="background:white; color:black;">Guardar en la base de datos</button>
-                    <button type="button" class="btn-rosa" style="background:white; color:black;" onclick="document.getElementById('modalServicio').style.display='none'">CANCELAR</button>
+                    <button type="submit" class="btn-rosa" id="btn-guardar">Guardar</button>
+                    <button type="button" class="btn-outline" style="border-color:#333; color:#333;" onclick="document.getElementById('modalServicio').style.display='none'">Cancelar</button>
                 </div>
             </form>
         </div>
@@ -121,109 +103,106 @@
         let currentUser = JSON.parse(localStorage.getItem('kova_current_user'));
         if (!currentUser) window.location.href = 'index.html';
         document.getElementById('nombre-usuario').innerText = currentUser.nombre_completo || 'Usuario';
+        let serviciosActuales = [];
 
-        // Lógica condicional para mostrar la ubicación
         document.getElementById('lugar_servicio').addEventListener('change', function() {
-            const divUbicacion = document.getElementById('div_ubicacion');
-            if (this.value === 'Sucursal física') {
-                divUbicacion.style.display = 'block';
-                document.getElementById('ubicacion').setAttribute('required', 'true');
-            } else {
-                divUbicacion.style.display = 'none';
-                document.getElementById('ubicacion').removeAttribute('required');
-                document.getElementById('ubicacion').value = '';
-            }
+            document.getElementById('div_ubicacion').style.display = (this.value === 'Sucursal física') ? 'block' : 'none';
         });
 
-        // Cargar servicios al abrir la página (Actualizado con id_usuario)
         async function cargarServicios() {
             try {
-                // Se cambió currentUser.id por currentUser.id_usuario
                 const res = await fetch(`${API_URL}/api/mis_servicios/${currentUser.id_usuario}`);
-                const servicios = await res.json();
+                serviciosActuales = await res.json();
                 const lista = document.getElementById('lista-servicios');
                 
-                if (servicios.length === 0) {
-                    lista.innerHTML = '<p>No hay ningún servicio registrado aún</p>';
+                if (serviciosActuales.length === 0) {
+                    lista.innerHTML = '<p style="color:gray;">No hay servicios registrados.</p>';
+                    document.getElementById('detalle-servicio').innerHTML = '<p style="color:gray;">Selecciona un servicio de la lista.</p>';
                     return;
                 }
 
                 lista.innerHTML = '';
-                servicios.forEach((serv, index) => {
+                serviciosActuales.forEach((serv, index) => {
                     const item = document.createElement('div');
-                    item.className = 'servicio-item';
-                    item.innerHTML = `<strong>${index + 1} - ${serv.tipo_servicio}</strong>`;
-                    item.onclick = () => mostrarDetalle(serv, index + 1);
+                    item.className = 'lista-item';
+                    item.innerText = `${index + 1}. ${serv.tipo_servicio}`;
+                    item.onclick = () => mostrarDetalle(serv);
                     lista.appendChild(item);
                 });
+                
+                // Mostrar el primero por defecto
+                mostrarDetalle(serviciosActuales[0]);
             } catch (e) { console.error('Error cargando servicios:', e); }
         }
 
-        // Mostrar detalle del servicio y el mapa de Google
-        function mostrarDetalle(serv, numero) {
+        function mostrarDetalle(serv) {
             const detalle = document.getElementById('detalle-servicio');
+            let ubicacionHtml = serv.lugar_servicio === 'Sucursal física' && serv.ubicacion 
+                ? `<p><strong>Ubicación:</strong> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(serv.ubicacion)}" target="_blank">${serv.ubicacion}</a></p>` : '';
             
-            // Lógica para enlace a Google Maps si es sucursal
-            let ubicacionHtml = '';
-            if (serv.lugar_servicio === 'Sucursal física' && serv.ubicacion) {
-                const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(serv.ubicacion)}`;
-                ubicacionHtml = `
-                    <div class="info-label">Ubicación</div>
-                    <div class="info-valor"><a href="${mapsUrl}" target="_blank" style="color:blue;">${serv.ubicacion} (Ver en Google Maps)</a></div>
-                `;
-            }
-
             detalle.innerHTML = `
-                <div style="display:flex; justify-content: space-between;">
-                    <h2>Servicios</h2>
-                    <div><a href="#" style="color:red; text-decoration:none;">Eliminar</a><br><a href="#" style="color:teal; text-decoration:none;">Editar</a></div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:15px;">
+                    <div>
+                        <h2 style="margin:0; color:#d76ba6;">${serv.tipo_servicio}</h2>
+                        <h3 style="margin:5px 0 0 0; color:teal;">$${serv.precio} MXN</h3>
+                    </div>
+                    <div class="acciones-detalle">
+                        <button class="btn-editar" onclick='abrirModalEditar(${JSON.stringify(serv)})'>✎ Editar</button>
+                        <button class="btn-eliminar" onclick="eliminarServicio(${serv.id_servicio})">🗑 Eliminar</button>
+                    </div>
                 </div>
                 <div class="grid-2">
                     <div>
-                        <div class="info-label">Tipo del servicio</div>
-                        <div class="info-valor">${numero} - ${serv.tipo_servicio}</div>
-                        
-                        <div class="info-label">Nombre del prestador</div>
-                        <div class="info-valor">${serv.nombre_prestador}</div>
-                        
-                        <div class="info-label">Imágenes del producto</div>
-                        <div class="info-valor">
-                            ${serv.imagen1 ? `<img src="${API_URL}/static/uploads/${serv.imagen1}" class="img-preview">` : ''}
-                            ${serv.imagen2 ? `<img src="${API_URL}/static/uploads/${serv.imagen2}" class="img-preview">` : ''}
-                        </div>
-
-                        <div class="info-label">Lugar del servicio</div>
-                        <div class="info-valor">${serv.lugar_servicio}</div>
+                        <p><strong>Prestador:</strong> ${serv.nombre_prestador} (${serv.edad} años)</p>
+                        <p><strong>Lugar:</strong> ${serv.lugar_servicio}</p>
                         ${ubicacionHtml}
+                        <p><strong>Contacto:</strong> ${serv.contacto}</p>
                     </div>
                     <div>
-                        <div class="info-label">Edad</div>
-                        <div class="info-valor">${serv.edad} (años)</div>
-                        
-                        <div class="info-label">Descripción</div>
-                        <div class="info-valor">${serv.descripcion}</div>
-                        
-                        <div class="info-label">Días de servicio</div>
-                        <div class="info-valor">${serv.dias_servicio}</div>
-                        
-                        <div class="info-label">Precio del servicio</div>
-                        <div class="info-valor">${serv.precio} mxn</div>
-                        
-                        <div class="info-label">Contacto del prestador</div>
-                        <div class="info-valor">${serv.contacto}</div>
+                        <p><strong>Días:</strong> ${serv.dias_servicio}</p>
+                        <p><strong>Descripción:</strong><br>${serv.descripcion}</p>
                     </div>
+                </div>
+                <div style="margin-top:20px; display:flex; gap:15px;">
+                    ${serv.imagen1 ? `<img src="${API_URL}/static/uploads/${serv.imagen1}" style="width:150px; height:150px; object-fit:cover; border-radius:10px; border:1px solid #ddd;">` : ''}
+                    ${serv.imagen2 ? `<img src="${API_URL}/static/uploads/${serv.imagen2}" style="width:150px; height:150px; object-fit:cover; border-radius:10px; border:1px solid #ddd;">` : ''}
                 </div>
             `;
         }
 
-        // Guardar nuevo servicio (Actualizado con id_usuario)
+        function abrirModalCrear() {
+            document.getElementById('modal-titulo').innerText = 'Agregar Servicio';
+            document.getElementById('form-servicio').reset();
+            document.getElementById('id_servicio_edit').value = '';
+            document.getElementById('div_imagenes').style.display = 'grid'; // Mostrar inputs de imagen
+            document.getElementById('div_ubicacion').style.display = 'none';
+            document.getElementById('modalServicio').style.display = 'flex';
+        }
+
+        function abrirModalEditar(serv) {
+            document.getElementById('modal-titulo').innerText = 'Editar Servicio';
+            document.getElementById('id_servicio_edit').value = serv.id_servicio;
+            document.getElementById('tipo_servicio').value = serv.tipo_servicio;
+            document.getElementById('nombre_prestador').value = serv.nombre_prestador;
+            document.getElementById('edad').value = serv.edad;
+            document.getElementById('descripcion').value = serv.descripcion;
+            document.getElementById('dias_servicio').value = serv.dias_servicio;
+            document.getElementById('precio').value = serv.precio;
+            document.getElementById('lugar_servicio').value = serv.lugar_servicio;
+            document.getElementById('ubicacion').value = serv.ubicacion || '';
+            document.getElementById('contacto').value = serv.contacto;
+            
+            document.getElementById('div_ubicacion').style.display = (serv.lugar_servicio === 'Sucursal física') ? 'block' : 'none';
+            document.getElementById('div_imagenes').style.display = 'none'; // Ocultar imágenes en edición para simplificar
+            document.getElementById('modalServicio').style.display = 'flex';
+        }
+
         document.getElementById('form-servicio').addEventListener('submit', async (e) => {
             e.preventDefault();
+            const isEdit = document.getElementById('id_servicio_edit').value !== '';
             const formData = new FormData();
             
-            // Se cambió currentUser.id por currentUser.id_usuario
             formData.append('id_usuario', currentUser.id_usuario);
-            
             formData.append('tipo_servicio', document.getElementById('tipo_servicio').value);
             formData.append('nombre_prestador', document.getElementById('nombre_prestador').value);
             formData.append('edad', document.getElementById('edad').value);
@@ -233,28 +212,35 @@
             formData.append('lugar_servicio', document.getElementById('lugar_servicio').value);
             formData.append('ubicacion', document.getElementById('ubicacion').value);
             formData.append('contacto', document.getElementById('contacto').value);
+
+            let endpoint = `${API_URL}/api/crear_servicio`;
             
-            const file1 = document.getElementById('imagen1').files[0];
-            const file2 = document.getElementById('imagen2').files[0];
-            if(file1) formData.append('imagen1', file1);
-            if(file2) formData.append('imagen2', file2);
+            if (isEdit) {
+                endpoint = `${API_URL}/api/editar_servicio/${document.getElementById('id_servicio_edit').value}`;
+            } else {
+                const f1 = document.getElementById('imagen1').files[0];
+                const f2 = document.getElementById('imagen2').files[0];
+                if(f1) formData.append('imagen1', f1);
+                if(f2) formData.append('imagen2', f2);
+            }
 
             try {
-                const res = await fetch(`${API_URL}/api/crear_servicio`, { method: 'POST', body: formData });
+                const res = await fetch(endpoint, { method: 'POST', body: formData });
                 const data = await res.json();
                 if (data.success) {
-                    alert('Servicio guardado correctamente');
                     document.getElementById('modalServicio').style.display = 'none';
-                    document.getElementById('form-servicio').reset();
                     cargarServicios();
                 } else alert('Error: ' + data.message);
             } catch (error) { console.error('Error:', error); }
         });
-        function cerrarSesion() {
-            localStorage.removeItem('kova_current_user');
-            window.location.href = 'index.html';
+
+        async function eliminarServicio(id) {
+            if(!confirm('¿Eliminar este servicio?')) return;
+            // Aquí puedes agregar tu endpoint de eliminar. Por ahora recargamos UI.
+            alert('Función de eliminar en construcción. Implementar endpoint backend.');
         }
 
+        function cerrarSesion() { localStorage.removeItem('kova_current_user'); window.location.href = 'index.html'; }
         cargarServicios();
     </script>
 </body>

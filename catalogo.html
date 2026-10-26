@@ -79,14 +79,28 @@
 
     <main class="catalogo-container">
         <h1 style="font-size: 1.4rem; color: var(--primary-text);">Insumos y Productos para tu Mascota</h1>
-        <div style="margin-left: 20px; margin-bottom: 20px; display:flex; gap:10px;">
-            <button id="btn-servicios" class="btn-rosa" style="background:transparent; color:#d76ba6; border:1px solid #d76ba6; cursor:pointer;" onclick="mostrarCatalogo('servicios')">Servicios</button>
-            <button id="btn-productos" class="btn-rosa" style="background:#d76ba6; color:white; border:none; cursor:pointer;" onclick="mostrarCatalogo('productos')">Productos</button>
+        <div style="margin: 20px; display:flex; gap:10px;">
+            <button id="btn-productos" class="btn-rosa" onclick="mostrarCatalogo('productos')">Productos</button>
+            <button id="btn-servicios" class="btn-outline" style="border: 1px solid #d76ba6; background:transparent; color:#d76ba6; padding:10px 20px; border-radius:5px; cursor:pointer;" onclick="mostrarCatalogo('servicios')">Servicios</button>
         </div>
         <div class="productos-grid" id="grid-productos-publicos"></div>
     </main>
-    
 
+    <!-- Contenedor del Catálogo -->
+    <div id="grid-catalogo" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px; padding:20px;"></div>
+    
+    <!-- Modal Detalles (Estilo MercadoLibre) -->
+    <div id="modalVistaPrevia" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; justify-content:center; align-items:center;">
+        <div style="background:white; width:80%; max-width:900px; border-radius:10px; display:flex; position:relative; overflow:hidden; max-height:90vh;">
+            <button onclick="document.getElementById('modalVistaPrevia').style.display='none'" style="position:absolute; top:15px; right:15px; background:#eee; border:none; border-radius:50%; width:35px; height:35px; font-weight:bold; cursor:pointer; font-size:16px;">X</button>
+            <div id="modal-img-container" style="width:50%; background:#f8f9fa; display:flex; justify-content:center; align-items:center; padding:20px;">
+                <img id="modal-img" src="" style="max-width:100%; max-height:60vh; object-fit:contain;">
+            </div>
+            <div id="modal-info" style="width:50%; padding:40px 30px; overflow-y:auto;">
+                <!-- Info inyectada dinámicamente -->
+            </div>
+        </div>
+    </div>
     <!-- Modal Carrito -->
     <div id="modal-carrito" class="modal-carrito">
         <div class="carrito-contenido">
@@ -378,7 +392,99 @@
             }
         }
 
-        // Cargar productos por defecto al abrir el catálogo
+        const API_URL = 'http://127.0.0.1:5000';
+
+        async function mostrarCatalogo(tipo) {
+            const contenedor = document.getElementById('grid-catalogo');
+            contenedor.innerHTML = '<p style="padding:20px;">Cargando catálogo...</p>';
+
+            // Gestión visual de botones activos
+            const btnP = document.getElementById('btn-productos');
+            const btnS = document.getElementById('btn-servicios');
+            if (tipo === 'productos') {
+                btnP.style.background = '#d76ba6'; btnP.style.color = 'white';
+                btnS.style.background = 'transparent'; btnS.style.color = '#d76ba6';
+            } else {
+                btnS.style.background = '#d76ba6'; btnS.style.color = 'white';
+                btnP.style.background = 'transparent'; btnP.style.color = '#d76ba6';
+            }
+
+            try {
+                const endpoint = tipo === 'productos' ? '/api/catalogo' : '/api/catalogo_servicios';
+                const res = await fetch(`${API_URL}${endpoint}`);
+                const datos = await res.json();
+                
+                contenedor.innerHTML = '';
+                if(datos.length === 0) {
+                    contenedor.innerHTML = '<p>No hay elementos disponibles por el momento.</p>';
+                    return;
+                }
+                
+                datos.forEach(item => {
+                    const esProducto = tipo === 'productos';
+                    const imagenSrc = item.imagen1 ? `${API_URL}/static/uploads/${item.imagen1}` : 'img/placeholder.png';
+                    const titulo = esProducto ? item.nombre_producto : item.tipo_servicio;
+                    const descBreve = esProducto ? item.descripcion.substring(0, 50) + '...' : `Prestador: ${item.nombre_prestador}`;
+                    
+                    const card = document.createElement('div');
+                    card.style = 'background:white; border-radius:10px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; transition:0.2s;';
+                    card.onmouseover = () => card.style.transform = 'scale(1.02)';
+                    card.onmouseout = () => card.style.transform = 'scale(1)';
+                    // Al hacer clic, abre el modal
+                    card.onclick = () => abrirModalDetalle(item, tipo, imagenSrc, titulo);
+
+                    card.innerHTML = `
+                        <img src="${imagenSrc}" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
+                        <h4 style="margin:0 0 5px 0; color:#333;">${titulo}</h4>
+                        <p style="color:gray; font-size:13px; margin:0 0 10px 0; height:35px; overflow:hidden;">${descBreve}</p>
+                        <h3 style="color:teal; margin:0 0 15px 0;">$${item.precio} MXN</h3>
+                        <button style="width:100%; background:#d76ba6; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">Ver Detalles</button>
+                    `;
+                    contenedor.appendChild(card);
+                });
+            } catch(e) {
+                console.error("Error cargando catálogo:", e);
+                contenedor.innerHTML = '<p>Error de conexión con el servidor.</p>';
+            }
+        }
+
+        function abrirModalDetalle(item, tipo, imgUrl, titulo) {
+            document.getElementById('modal-img').src = imgUrl;
+            
+            const infoContainer = document.getElementById('modal-info');
+            const esProducto = tipo === 'productos';
+            
+            let detallesExtra = '';
+            if (esProducto) {
+                detallesExtra = `
+                    <p style="color:green; font-weight:bold; margin-bottom:20px;">✓ Stock disponible: ${item.stock}</p>
+                    <p style="color:#555; line-height:1.6;">${item.descripcion}</p>
+                `;
+            } else {
+                detallesExtra = `
+                    <p style="color:#555; line-height:1.6; margin-bottom:15px;">${item.descripcion}</p>
+                    <div style="background:#f1f1f1; padding:15px; border-radius:8px; margin-bottom:20px;">
+                        <p style="margin:5px 0;"><strong>Atendido por:</strong> ${item.nombre_prestador} (${item.edad} años)</p>
+                        <p style="margin:5px 0;"><strong>Días de atención:</strong> ${item.dias_servicio}</p>
+                        <p style="margin:5px 0;"><strong>Modalidad:</strong> ${item.lugar_servicio}</p>
+                        ${item.ubicacion ? `<p style="margin:5px 0;"><strong>Ubicación:</strong> ${item.ubicacion}</p>` : ''}
+                        <p style="margin:5px 0;"><strong>Contacto:</strong> ${item.contacto}</p>
+                    </div>
+                `;
+            }
+
+            infoContainer.innerHTML = `
+                <p style="color:gray; font-size:12px; margin-top:0;">${esProducto ? 'Nuevo | Producto' : 'Servicio Especializado'}</p>
+                <h1 style="margin:5px 0 15px 0; font-size:24px; color:#333;">${titulo}</h1>
+                <h2 style="font-size:32px; font-weight:normal; margin:0 0 20px 0;">$${item.precio} <span style="font-size:16px;">MXN</span></h2>
+                ${detallesExtra}
+                <button style="width:100%; background:#3483fa; color:white; border:none; padding:15px; border-radius:5px; font-size:16px; font-weight:bold; cursor:pointer; transition:0.3s;" onmouseover="this.style.background='#2968c8'" onmouseout="this.style.background='#3483fa'">Agregar al carrito</button>
+            `;
+            
+            document.getElementById('modalVistaPrevia').style.display = 'flex';
+        }
+
+        // Iniciar en la pestaña productos por defecto
         mostrarCatalogo('productos');
     </script>
 </body>

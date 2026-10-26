@@ -162,15 +162,20 @@
     </div>
 
     <script>
+        const API_URL = 'http://127.0.0.1:5000';
         let usuarioActual = null;
         let productosGlobales = [];
 
         document.addEventListener('DOMContentLoaded', function() {
             usuarioActual = JSON.parse(localStorage.getItem('kova_current_user') || '{}');
+            if(!usuarioActual.id_usuario) {
+                window.location.href = 'index.html';
+                return;
+            }
             if(usuarioActual.nombre_completo) {
                 document.getElementById('saludo-vendedor').textContent = `Hola, "${usuarioActual.nombre_completo}", Bienvenido`;
             }
-            cargarMisProductos();
+            cargarProductos();
         });
 
         function abrirModalRegistro() { document.getElementById('modal-producto').style.display = 'flex'; }
@@ -210,9 +215,9 @@
         function guardarProducto(e) {
             e.preventDefault();
             const formData = new FormData(document.getElementById('form-producto'));
-            formData.append('id_vendedor', usuarioActual.id_usuario || 1);
+            formData.append('id_vendedor', usuarioActual.id_usuario);
 
-            fetch('http://127.0.0.1:5000/api/registrar_producto', {
+            fetch(`${API_URL}/api/registrar_producto`, {
                 method: 'POST',
                 body: formData
             })
@@ -228,67 +233,93 @@
                         let span = slot.querySelector('span');
                         if(span) span.style.display = 'block';
                     }
-                    cargarMisProductos();
+                    cargarProductos();
                 } else {
                     alert("Error: " + data.message);
                 }
             });
         }
 
-        function cargarMisProductos() {
-            fetch('http://127.0.0.1:5000/api/productos')
-            .then(res => res.json())
-            .then(data => {
-                if(data.status === 'success' && data.productos.length > 0) {
-                    productosGlobales = data.productos;
-                    let resumidoHtml = '';
-                    let detalladoHtml = '';
-                    
-                    data.productos.forEach((p, idx) => {
-                        resumidoHtml += `<div>${idx + 1} - ${p.nombre_producto}</div>`;
-                        
-                        let imgsHtml = '';
-                        for(let i=1; i<=5; i++) {
-                            let imgName = p[`imagen_${i}`];
-                            if(imgName && imgName !== 'None' && imgName !== '' && imgName !== null) {
-                                imgsHtml += `<div style="border:1px solid #ddd; width:45px; height:45px; border-radius:4px; overflow:hidden;"><img src="http://127.0.0.1:5000/static/uploads/${imgName}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='img/LOGO_KOVA.png'"></div>`;
-                            }
-                        }
+        async function cargarProductos() {
+            try {
+                const res = await fetch(`${API_URL}/api/mis_productos/${usuarioActual.id_usuario}`);
+                productosGlobales = await res.json();
+                
+                const lista = document.getElementById('lista-resumida'); 
+                const detalle = document.getElementById('lista-detallada'); 
+                
+                if (productosGlobales.length === 0) {
+                    lista.innerHTML = '<div style="margin-top: 15px; font-size: 0.9rem;">No hay productos registrados aún.</div>';
+                    detalle.innerHTML = '<div style="margin-top: 15px;">No hay ningún producto en la lista.</div>';
+                    return;
+                }
 
-                        detalladoHtml += `
-                            <div style="border-bottom: 1px solid #eee; padding-bottom: 12px; margin-bottom: 12px;">
-                                <div style="display:flex; justify-content:space-between;">
-                                    <strong>${idx + 1} - ${p.nombre_producto}</strong>
-                                    <span style="color:var(--primary-accent); font-weight:700;">$${p.precio} MXN</span>
-                                </div>
-                                <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Stock disponible:</strong> ${p.cantidad} piezas</div>
-                                <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Descripción:</strong> ${p.descripcion}</div>
-                                <div style="font-size:0.82rem; color:var(--body-text); margin: 4px 0;"><strong>Proveedor:</strong> ${p.nombre_proveedor || 'N/A'} (${p.contacto_proveedor || 'Sin contacto'})</div>
-                                <div style="display:flex; gap:6px; margin-top:8px; align-items:center; flex-wrap:wrap;">
-                                    ${imgsHtml !== '' ? imgsHtml : '<span style="font-size:0.75rem; color:#999;">Sin imágenes adjuntas</span>'}
-                                    <div style="margin-left:auto; display:flex; gap:8px;">
-                                        <button onclick="abrirEditar(${p.id_producto})" style="background:var(--primary-accent); color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-pen"></i> Editar</button>
-                                        <button onclick="eliminarProducto(${p.id_producto})" style="background:#e74c3c; color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer; font-weight:700; font-size:0.8rem;"><i class="fa-solid fa-trash"></i> Eliminar</button>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    document.getElementById('lista-resumida').innerHTML = resumidoHtml;
-                    document.getElementById('lista-detallada').innerHTML = detalladoHtml;
+                lista.innerHTML = '';
+                productosGlobales.forEach((prod, index) => {
+                    const item = document.createElement('div');
+                    item.style = 'padding: 12px; border-bottom: 1px solid var(--border-color); cursor: pointer; transition: 0.3s; font-weight: 500;';
+                    item.onmouseover = () => { item.style.backgroundColor = 'var(--soft-pink)'; item.style.color = 'var(--brand-identity)'; };
+                    item.onmouseout = () => { item.style.backgroundColor = 'transparent'; item.style.color = 'var(--body-text)'; };
+                    item.innerText = `${index + 1}. ${prod.nombre_producto}`;
+                    item.onclick = () => mostrarDetalleProducto(prod);
+                    lista.appendChild(item);
+                });
+
+                // Mostrar automáticamente el primer producto
+                mostrarDetalleProducto(productosGlobales[0]);
+            } catch (e) { 
+                console.error("Error cargando productos:", e); 
+            }
+        }
+
+        function mostrarDetalleProducto(prod) {
+            const detalle = document.getElementById('lista-detallada');
+            
+            // Recopilar imágenes disponibles (asumiendo que tu backend las guarda como imagen_1, imagen_2, etc. o imagen1, imagen2)
+            let imgHtml = '';
+            const imgKeys = ['imagen_1', 'imagen_2', 'imagen_3', 'imagen_4', 'imagen_5', 'imagen1', 'imagen2'];
+            imgKeys.forEach(key => {
+                if (prod[key]) {
+                    imgHtml += `<img src="${API_URL}/static/uploads/${prod[key]}" style="width:100px; height:100px; object-fit:cover; border-radius:8px; border:1px solid #eee;">`;
                 }
             });
+
+            detalle.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid var(--border-color); padding-bottom:15px; margin-bottom:15px;">
+                    <div>
+                        <h2 style="margin:0; color:var(--primary-accent);">${prod.nombre_producto}</h2>
+                        <h3 style="margin:5px 0 0 0; color:var(--brand-identity);">$${prod.precio} MXN</h3>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <button class="btn-logout" style="background:#17a2b8; color:white; border:none; padding:8px 12px;" onclick='abrirEditar(${prod.id_producto || prod.id})'>✎ Editar</button>
+                        <button class="btn-logout" style="background:#dc3545; color:white; border:none; padding:8px 12px;" onclick="eliminarProducto(${prod.id_producto || prod.id})">🗑 Eliminar</button>
+                    </div>
+                </div>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div>
+                        <p style="margin-bottom:10px;"><strong>Descripción:</strong><br>${prod.descripcion}</p>
+                        <p style="margin-bottom:10px;"><strong>Stock disponible:</strong> ${prod.cantidad || prod.stock} piezas</p>
+                    </div>
+                    <div>
+                        ${prod.nombre_proveedor ? `<p style="margin-bottom:10px;"><strong>Proveedor:</strong> ${prod.nombre_proveedor}</p>` : ''}
+                        ${prod.contacto_proveedor ? `<p style="margin-bottom:10px;"><strong>Contacto:</strong> ${prod.contacto_proveedor}</p>` : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:10px; margin-top:15px; flex-wrap:wrap;">
+                    ${imgHtml}
+                </div>
+            `;
         }
 
         function abrirEditar(idProducto) {
-            let p = productosGlobales.find(item => item.id_producto === idProducto);
+            let p = productosGlobales.find(item => (item.id_producto === idProducto || item.id === idProducto));
             if(!p) return;
 
-            document.getElementById('edit_id_producto').value = p.id_producto;
+            document.getElementById('edit_id_producto').value = p.id_producto || p.id;
             document.getElementById('edit_nombre').value = p.nombre_producto;
             document.getElementById('edit_descripcion').value = p.descripcion;
             document.getElementById('edit_precio').value = p.precio;
-            document.getElementById('edit_cantidad').value = p.cantidad;
+            document.getElementById('edit_cantidad').value = p.cantidad || p.stock;
             document.getElementById('edit_nombre_proveedor').value = p.nombre_proveedor || '';
             document.getElementById('edit_contacto_proveedor').value = p.contacto_proveedor || '';
 
@@ -307,16 +338,16 @@
             const id = document.getElementById('edit_id_producto').value;
             const formData = new FormData(document.getElementById('form-editar'));
 
-            fetch(`http://127.0.0.1:5000/api/actualizar_producto/${id}`, {
+            fetch(`${API_URL}/api/actualizar_producto/${id}`, {
                 method: 'POST',
                 body: formData
             })
             .then(res => res.json())
             .then(data => {
-                if(data.status === 'success') {
+                if(data.status === 'success' || data.success) {
                     alert("¡Producto actualizado correctamente!");
                     cerrarModalEdicion();
-                    cargarMisProductos();
+                    cargarProductos();
                 } else {
                     alert("Error: " + data.message);
                 }
@@ -325,14 +356,14 @@
 
         function eliminarProducto(idProducto) {
             if(confirm("¿Estás seguro de que deseas eliminar este producto?")) {
-                fetch(`http://127.0.0.1:5000/api/eliminar_producto/${idProducto}`, {
+                fetch(`${API_URL}/api/eliminar_producto/${idProducto}`, {
                     method: 'DELETE'
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if(data.status === 'success') {
+                    if(data.status === 'success' || data.success) {
                         alert("Producto eliminado exitosamente.");
-                        cargarMisProductos();
+                        cargarProductos();
                     } else {
                         alert("Error al eliminar: " + data.message);
                     }
