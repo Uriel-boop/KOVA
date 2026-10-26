@@ -970,6 +970,22 @@ def eliminar_producto(id_producto):
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)}), 500
 
+@app.route('/api/productos_vendedor/<int:id_vendedor>', methods=['GET'])
+def obtener_productos_vendedor(id_vendedor):
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor(dictionary=True)
+        # Filtra los productos específicamente por el ID del vendedor logueado
+        cursor.execute("SELECT * FROM productos_vendedor WHERE id_vendedor = %s ORDER BY fecha_registro DESC", (id_vendedor,))
+        productos = cursor.fetchall()
+        cursor.close()
+        conn.close()
+        
+        # Devuelve la información dentro del nodo "data" que espera tu frontend
+        return jsonify({"status": "success", "data": productos}), 200
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 # Ruta para guardar un nuevo servicio
 @app.route('/api/crear_servicio', methods=['POST'])
 def crear_servicio():

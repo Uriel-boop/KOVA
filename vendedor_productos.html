@@ -173,7 +173,7 @@
                 return;
             }
             if(usuarioActual.nombre_completo) {
-                document.getElementById('saludo-vendedor').textContent = `Hola, "${usuarioActual.nombre_completo}", Bienvenido`;
+                document.getElementById('saludo-vendedor').textContent = `Hola, "${usuarioActual.nombre_completo}", Bienvenid@`;
             }
             cargarProductos();
         });
@@ -242,13 +242,16 @@
 
         async function cargarProductos() {
             try {
-                const res = await fetch(`${API_URL}/api/mis_productos/${usuarioActual.id_usuario}`);
-                productosGlobales = await res.json();
+                const res = await fetch(`${API_URL}/api/productos_vendedor/${usuarioActual.id_usuario}`);
+                const respuesta = await res.json();
+                
+                // CORRECCIÓN: El backend devuelve los productos dentro de la propiedad "data"
+                productosGlobales = respuesta.data || respuesta.productos || respuesta || [];
                 
                 const lista = document.getElementById('lista-resumida'); 
                 const detalle = document.getElementById('lista-detallada'); 
                 
-                if (productosGlobales.length === 0) {
+                if (!Array.isArray(productosGlobales) || productosGlobales.length === 0) {
                     lista.innerHTML = '<div style="margin-top: 15px; font-size: 0.9rem;">No hay productos registrados aún.</div>';
                     detalle.innerHTML = '<div style="margin-top: 15px;">No hay ningún producto en la lista.</div>';
                     return;
@@ -266,12 +269,13 @@
                 });
 
                 // Mostrar automáticamente el primer producto
-                mostrarDetalleProducto(productosGlobales[0]);
+                if (productosGlobales.length > 0) {
+                    mostrarDetalleProducto(productosGlobales[0]);
+                }
             } catch (e) { 
                 console.error("Error cargando productos:", e); 
             }
         }
-
         function mostrarDetalleProducto(prod) {
             const detalle = document.getElementById('lista-detallada');
             

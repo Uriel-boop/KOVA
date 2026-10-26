@@ -77,14 +77,14 @@
         </nav>
     </div>
 
-    <main class="catalogo-container">
-        <h1 style="font-size: 1.4rem; color: var(--primary-text);">Insumos y Productos para tu Mascota</h1>
-        <div style="margin: 20px; display:flex; gap:10px;">
-            <button id="btn-productos" class="btn-rosa" onclick="mostrarCatalogo('productos')">Productos</button>
-            <button id="btn-servicios" class="btn-outline" style="border: 1px solid #d76ba6; background:transparent; color:#d76ba6; padding:10px 20px; border-radius:5px; cursor:pointer;" onclick="mostrarCatalogo('servicios')">Servicios</button>
-        </div>
-        <div class="productos-grid" id="grid-productos-publicos"></div>
-    </main>
+    <!-- Botones de Filtro (Estilo unificado) -->
+    <div style="margin: 20px; display:flex; gap:10px; justify-content:center;">
+        <button id="btn-productos" style="background:#d76ba6; color:white; border:none; padding:10px 30px; border-radius:20px; font-weight:bold; cursor:pointer;" onclick="mostrarCatalogo('productos')">Productos</button>
+        <button id="btn-servicios" style="background:transparent; color:#d76ba6; border:2px solid #d76ba6; padding:10px 30px; border-radius:20px; font-weight:bold; cursor:pointer;" onclick="mostrarCatalogo('servicios')">Servicios</button>
+    </div>
+
+    <!-- Contenedor del Catálogo (El JavaScript se encargará de llenarlo y vaciarlo) -->
+    <div id="grid-catalogo" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px; padding:20px;"></div>
 
     <!-- Contenedor del Catálogo -->
     <div id="grid-catalogo" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap:20px; padding:20px;"></div>
@@ -161,7 +161,8 @@
             if(usuarioActual.nombre_completo) {
                 document.getElementById('carrito-titular').textContent = `Titular de compra: "${usuarioActual.nombre_completo}"`;
             }
-            cargarCatalogoProductos();
+            // Se mantiene por si usas la cuadrícula antigua en otra parte de la página
+            cargarCatalogoProductos(); 
         });
 
         function cargarCatalogoProductos() {
@@ -169,10 +170,11 @@
             .then(res => res.json())
             .then(data => {
                 const grid = document.getElementById('grid-productos-publicos');
+                if(!grid) return; // Evita errores si eliminaste este div
                 grid.innerHTML = '';
                 if(data.status === 'success' && data.productos.length > 0) {
                     productosDisponibles = data.productos;
-                    productosDisponibles.forEach(p => {
+                    data.productos.forEach(p => {
                         let imgs = [];
                         for(let i=1; i<=5; i++) {
                             let imgName = p[`imagen_${i}`];
@@ -221,19 +223,19 @@
         }
 
         function agregarAlCarrito(idProducto) {
-            let producto = productosDisponibles.find(p => p.id_producto === idProducto);
+            let producto = productosDisponibles.find(p => (p.id_producto === idProducto || p.id === idProducto));
             if(!producto) return;
 
-            let itemEnCarrito = carrito.find(item => item.id_producto === idProducto);
+            let itemEnCarrito = carrito.find(item => (item.id_producto === idProducto || item.id === idProducto));
             if(itemEnCarrito) {
-                if(itemEnCarrito.cantidad < producto.cantidad) {
+                if(itemEnCarrito.cantidad < (producto.cantidad || producto.stock)) {
                     itemEnCarrito.cantidad += 1;
                 } else {
                     alert("No hay más stock disponible para agregar.");
                     return;
                 }
             } else {
-                if(producto.cantidad > 0) {
+                if((producto.cantidad || producto.stock) > 0) {
                     carrito.push({ ...producto, cantidad: 1 });
                 } else {
                     alert("Producto agotado.");
@@ -257,7 +259,7 @@
                 carrito.forEach((item, index) => {
                     let imgs = [];
                     for(let i=1; i<=5; i++) {
-                        let imgName = item[`imagen_${i}`];
+                        let imgName = item[`imagen_${i}`] || item[`imagen${i}`];
                         if(imgName && imgName !== 'None' && imgName !== '') {
                             imgs.push(imgName);
                         }
@@ -295,13 +297,14 @@
 
         function cambiarCantidad(index, delta) {
             let item = carrito[index];
-            let productoOriginal = productosDisponibles.find(p => p.id_producto === item.id_producto);
+            let productoOriginal = productosDisponibles.find(p => (p.id_producto === item.id_producto || p.id === item.id));
+            let stockDisponible = productoOriginal.cantidad || productoOriginal.stock;
             
             let nuevaCantidad = item.cantidad + delta;
-            if(nuevaCantidad > 0 && nuevaCantidad <= productoOriginal.cantidad) {
+            if(nuevaCantidad > 0 && nuevaCantidad <= stockDisponible) {
                 item.cantidad = nuevaCantidad;
                 actualizarCarritoUI();
-            } else if(nuevaCantidad > productoOriginal.cantidad) {
+            } else if(nuevaCantidad > stockDisponible) {
                 alert("Has alcanzado el límite del stock disponible.");
             }
         }
@@ -329,7 +332,7 @@
                     fetch('http://127.0.0.1:5000/api/comprar_producto', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id_producto: item.id_producto })
+                        body: JSON.stringify({ id_producto: (item.id_producto || item.id) })
                     });
                 }
             });
@@ -339,6 +342,7 @@
             actualizarCarritoUI();
             cerrarPago();
             cargarCatalogoProductos();
+            mostrarCatalogo('productos');
         }
 
         function cerrarSesion() {
@@ -346,99 +350,90 @@
             window.location.href = 'index.html';
         }
 
-        async function mostrarCatalogo(tipo) {
-            const contenedor = document.getElementById('grid-productos'); // Asumiendo que tu div de tarjetas se llama así
-            contenedor.innerHTML = '<p>Cargando...</p>';
-
-            // Actualizar diseño de botones
-            if (tipo === 'productos') {
-                document.getElementById('btn-productos').style.background = '#d76ba6';
-                document.getElementById('btn-productos').style.color = 'white';
-                document.getElementById('btn-servicios').style.background = 'transparent';
-                document.getElementById('btn-servicios').style.color = '#d76ba6';
-            } else {
-                document.getElementById('btn-servicios').style.background = '#d76ba6';
-                document.getElementById('btn-servicios').style.color = 'white';
-                document.getElementById('btn-productos').style.background = 'transparent';
-                document.getElementById('btn-productos').style.color = '#d76ba6';
-            }
-
-            try {
-                const endpoint = tipo === 'productos' ? '/api/catalogo' : '/api/catalogo_servicios';
-                const res = await fetch(`${API_URL}${endpoint}`);
-                const datos = await res.json();
-                
-                contenedor.innerHTML = '';
-                
-                datos.forEach(item => {
-                    const imagenSrc = item.imagen1 ? `${API_URL}/static/uploads/${item.imagen1}` : 'img/placeholder.png';
-                    const titulo = tipo === 'productos' ? item.nombre_producto : item.tipo_servicio;
-                    const desc = tipo === 'productos' ? item.descripcion : `Prestador: ${item.nombre_prestador} | ${item.lugar_servicio}`;
-                    
-                    const card = document.createElement('div');
-                    card.className = 'tarjeta';
-                    card.innerHTML = `
-                        <img src="${imagenSrc}" style="width:100%; height:200px; object-fit:cover; border-radius:10px;">
-                        <h4>${titulo}</h4>
-                        <p style="color:gray; font-size:12px;">${desc}</p>
-                        <h3 style="color:teal;">$${item.precio} MXN</h3>
-                        <button class="btn-rosa" style="width:100%;">Agregar al carrito</button>
-                    `;
-                    contenedor.appendChild(card);
-                });
-            } catch(e) {
-                console.error("Error al cargar el catálogo:", e);
-                contenedor.innerHTML = '<p>Error al cargar la información.</p>';
-            }
-        }
-
         const API_URL = 'http://127.0.0.1:5000';
 
         async function mostrarCatalogo(tipo) {
             const contenedor = document.getElementById('grid-catalogo');
-            contenedor.innerHTML = '<p style="padding:20px;">Cargando catálogo...</p>';
+            if(!contenedor) return;
+            
+            contenedor.innerHTML = '<p style="padding:20px; width:100%; text-align:center;">Cargando catálogo...</p>';
 
-            // Gestión visual de botones activos
+            // Gestión visual unificada de botones
             const btnP = document.getElementById('btn-productos');
             const btnS = document.getElementById('btn-servicios');
             if (tipo === 'productos') {
-                btnP.style.background = '#d76ba6'; btnP.style.color = 'white';
-                btnS.style.background = 'transparent'; btnS.style.color = '#d76ba6';
+                btnP.style.background = '#d76ba6'; btnP.style.color = 'white'; btnP.style.border = 'none';
+                btnS.style.background = 'transparent'; btnS.style.color = '#d76ba6'; btnS.style.border = '2px solid #d76ba6';
             } else {
-                btnS.style.background = '#d76ba6'; btnS.style.color = 'white';
-                btnP.style.background = 'transparent'; btnP.style.color = '#d76ba6';
+                btnS.style.background = '#d76ba6'; btnS.style.color = 'white'; btnS.style.border = 'none';
+                btnP.style.background = 'transparent'; btnP.style.color = '#d76ba6'; btnP.style.border = '2px solid #d76ba6';
             }
 
             try {
-                const endpoint = tipo === 'productos' ? '/api/catalogo' : '/api/catalogo_servicios';
+                const endpoint = tipo === 'productos' ? '/api/productos' : '/api/catalogo_servicios';
                 const res = await fetch(`${API_URL}${endpoint}`);
-                const datos = await res.json();
+                const respuesta = await res.json();
+                
+                const datos = tipo === 'productos' ? (respuesta.productos || []) : (respuesta || []);
                 
                 contenedor.innerHTML = '';
                 if(datos.length === 0) {
-                    contenedor.innerHTML = '<p>No hay elementos disponibles por el momento.</p>';
+                    contenedor.innerHTML = '<p style="width:100%; text-align:center;">No hay elementos disponibles por el momento.</p>';
                     return;
+                }
+
+                if(tipo === 'productos') {
+                    productosDisponibles = datos;
                 }
                 
                 datos.forEach(item => {
                     const esProducto = tipo === 'productos';
-                    const imagenSrc = item.imagen1 ? `${API_URL}/static/uploads/${item.imagen1}` : 'img/placeholder.png';
                     const titulo = esProducto ? item.nombre_producto : item.tipo_servicio;
                     const descBreve = esProducto ? item.descripcion.substring(0, 50) + '...' : `Prestador: ${item.nombre_prestador}`;
                     
+                    // Extraer todas las imágenes disponibles
+                    let imgs = [];
+                    for(let i=1; i<=5; i++) {
+                        let imgName = item[`imagen_${i}`] || item[`imagen${i}`];
+                        if(imgName && imgName !== 'None' && imgName !== '') {
+                            imgs.push(imgName);
+                        }
+                    }
+                    const principalImg = imgs.length > 0 ? `${API_URL}/static/uploads/${imgs[0]}` : 'img/placeholder.png';
+                    
+                    // Generar galería lateral de miniaturas para la tarjeta
+                    let miniaturasCard = '';
+                    imgs.forEach(img => {
+                        miniaturasCard += `<img src="${API_URL}/static/uploads/${img}" onmouseover="this.closest('.tarjeta-catalogo').querySelector('.img-principal').src=this.src" style="width: 45px; height: 45px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 1px solid #ddd; margin-bottom: 5px;">`;
+                    });
+
                     const card = document.createElement('div');
-                    card.style = 'background:white; border-radius:10px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; transition:0.2s;';
+                    card.className = 'tarjeta-catalogo';
+                    card.style = 'background:white; border-radius:10px; padding:15px; box-shadow:0 2px 8px rgba(0,0,0,0.1); cursor:pointer; transition:0.2s; display:flex; flex-direction:column; justify-content:space-between;';
                     card.onmouseover = () => card.style.transform = 'scale(1.02)';
                     card.onmouseout = () => card.style.transform = 'scale(1)';
-                    // Al hacer clic, abre el modal
-                    card.onclick = () => abrirModalDetalle(item, tipo, imagenSrc, titulo);
-
+                    
+                    const itemEncoded = encodeURIComponent(JSON.stringify(item));
+                    
+                    // Estructura restaurada: Miniaturas a la izquierda, imagen principal a la derecha
                     card.innerHTML = `
-                        <img src="${imagenSrc}" style="width:100%; height:200px; object-fit:cover; border-radius:8px; margin-bottom:10px;">
-                        <h4 style="margin:0 0 5px 0; color:#333;">${titulo}</h4>
-                        <p style="color:gray; font-size:13px; margin:0 0 10px 0; height:35px; overflow:hidden;">${descBreve}</p>
-                        <h3 style="color:teal; margin:0 0 15px 0;">$${item.precio} MXN</h3>
-                        <button style="width:100%; background:#d76ba6; color:white; border:none; padding:10px; border-radius:5px; font-weight:bold; cursor:pointer;">Ver Detalles</button>
+                        <div style="display:flex; gap:10px; margin-bottom:10px;" onclick="abrirModalDetalle('${itemEncoded}', '${tipo}', this.closest('.tarjeta-catalogo').querySelector('.img-principal').src, '${titulo}')">
+                            <div style="display:flex; flex-direction:column; width:50px; max-height:200px; overflow-y:auto; overflow-x:hidden;">
+                                ${miniaturasCard}
+                            </div>
+                            <div style="flex:1;">
+                                <img src="${principalImg}" class="img-principal" style="width:100%; height:200px; object-fit:cover; border-radius:8px;">
+                            </div>
+                        </div>
+                        <div onclick="abrirModalDetalle('${itemEncoded}', '${tipo}', this.closest('.tarjeta-catalogo').querySelector('.img-principal').src, '${titulo}')">
+                            <h4 style="margin:0 0 5px 0; color:#333; font-size:1.1rem;">${titulo}</h4>
+                            <p style="color:gray; font-size:13px; margin:0 0 10px 0; height:35px; overflow:hidden;">${descBreve}</p>
+                            <div style="font-size: 0.8rem; color: #666; margin-bottom: 5px;">
+                                ${esProducto ? `<strong>Stock disponible:</strong> ${item.cantidad || item.stock} piezas` : `<strong>Modalidad:</strong> ${item.lugar_servicio}`}
+                            </div>
+                            <h3 style="color:teal; margin:0 0 15px 0; font-size:1.2rem;">$${item.precio} MXN</h3>
+                        </div>
+                        <button onclick="abrirModalDetalle('${itemEncoded}', '${tipo}', this.closest('.tarjeta-catalogo').querySelector('.img-principal').src, '${titulo}')" style="width:100%; background:#d76ba6; color:white; border:none; padding:10px; border-radius:20px; font-weight:bold; cursor:pointer; text-transform:uppercase; font-size:12px;">Ver Detalles</button>
                     `;
                     contenedor.appendChild(card);
                 });
@@ -448,44 +443,76 @@
             }
         }
 
-        function abrirModalDetalle(item, tipo, imgUrl, titulo) {
-            document.getElementById('modal-img').src = imgUrl;
-            
-            const infoContainer = document.getElementById('modal-info');
+        function abrirModalDetalle(itemEncoded, tipo, imgUrl, titulo) {
+            const item = JSON.parse(decodeURIComponent(itemEncoded));
             const esProducto = tipo === 'productos';
             
+            // Recopilar todas las imágenes para incluirlas dentro del modal
+            let imgs = [];
+            for(let i=1; i<=5; i++) {
+                let imgName = item[`imagen_${i}`] || item[`imagen${i}`];
+                if(imgName && imgName !== 'None' && imgName !== '') {
+                    imgs.push(imgName);
+                }
+            }
+            
+            let miniaturasModal = '';
+            if(imgs.length > 1) {
+                imgs.forEach(img => {
+                    miniaturasModal += `<img src="${API_URL}/static/uploads/${img}" onmouseover="document.getElementById('modal-img').src=this.src" onclick="document.getElementById('modal-img').src=this.src" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid #ddd; margin: 0 5px;">`;
+                });
+            }
+
+            // Inyectar la imagen principal y las miniaturas interactivas en el contenedor izquierdo del modal
+            const imgContainer = document.getElementById('modal-img-container');
+            if(imgContainer) {
+                imgContainer.innerHTML = `
+                    <div style="display:flex; flex-direction:column; align-items:center; width:100%;">
+                        <img id="modal-img" src="${imgUrl}" style="max-width:100%; max-height:50vh; object-fit:contain; margin-bottom:15px; border-radius:8px;">
+                        <div style="display:flex; justify-content:center; flex-wrap:wrap; width:100%;">
+                            ${miniaturasModal}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const infoContainer = document.getElementById('modal-info');
             let detallesExtra = '';
+            let botonAccion = '';
+
             if (esProducto) {
                 detallesExtra = `
-                    <p style="color:green; font-weight:bold; margin-bottom:20px;">✓ Stock disponible: ${item.stock}</p>
-                    <p style="color:#555; line-height:1.6;">${item.descripcion}</p>
+                    <p style="color:green; font-weight:bold; margin-bottom:20px;">✓ Stock disponible: ${item.stock || item.cantidad} unidades</p>
+                    <p style="color:#555; line-height:1.6; white-space:pre-wrap;">${item.descripcion}</p>
                 `;
+                botonAccion = `<button onclick="agregarAlCarrito(${item.id_producto || item.id}); document.getElementById('modalVistaPrevia').style.display='none';" style="width:100%; background:#d76ba6; color:white; border:none; padding:15px; border-radius:20px; font-size:14px; font-weight:bold; cursor:pointer; text-transform:uppercase;">Agregar al carrito</button>`;
             } else {
                 detallesExtra = `
-                    <p style="color:#555; line-height:1.6; margin-bottom:15px;">${item.descripcion}</p>
-                    <div style="background:#f1f1f1; padding:15px; border-radius:8px; margin-bottom:20px;">
+                    <p style="color:#555; line-height:1.6; margin-bottom:15px; white-space:pre-wrap;">${item.descripcion}</p>
+                    <div style="background:#f1f1f1; padding:15px; border-radius:8px; margin-bottom:20px; font-size:14px;">
                         <p style="margin:5px 0;"><strong>Atendido por:</strong> ${item.nombre_prestador} (${item.edad} años)</p>
                         <p style="margin:5px 0;"><strong>Días de atención:</strong> ${item.dias_servicio}</p>
                         <p style="margin:5px 0;"><strong>Modalidad:</strong> ${item.lugar_servicio}</p>
-                        ${item.ubicacion ? `<p style="margin:5px 0;"><strong>Ubicación:</strong> ${item.ubicacion}</p>` : ''}
-                        <p style="margin:5px 0;"><strong>Contacto:</strong> ${item.contacto}</p>
+                        ${item.ubicacion ? `<p style="margin:5px 0;"><strong>Ubicación:</strong> <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(item.ubicacion)}" target="_blank">${item.ubicacion}</a></p>` : ''}
                     </div>
                 `;
+                botonAccion = `<a href="tel:${item.contacto}" style="display:block; text-align:center; width:100%; box-sizing:border-box; background:#d76ba6; color:white; text-decoration:none; padding:15px; border-radius:20px; font-size:14px; font-weight:bold; text-transform:uppercase;">Contactar (Llamada)</a>`;
             }
 
             infoContainer.innerHTML = `
                 <p style="color:gray; font-size:12px; margin-top:0;">${esProducto ? 'Nuevo | Producto' : 'Servicio Especializado'}</p>
                 <h1 style="margin:5px 0 15px 0; font-size:24px; color:#333;">${titulo}</h1>
-                <h2 style="font-size:32px; font-weight:normal; margin:0 0 20px 0;">$${item.precio} <span style="font-size:16px;">MXN</span></h2>
+                <h2 style="font-size:32px; font-weight:normal; margin:0 0 20px 0; color:teal;">$${item.precio} <span style="font-size:16px;">MXN</span></h2>
                 ${detallesExtra}
-                <button style="width:100%; background:#3483fa; color:white; border:none; padding:15px; border-radius:5px; font-size:16px; font-weight:bold; cursor:pointer; transition:0.3s;" onmouseover="this.style.background='#2968c8'" onmouseout="this.style.background='#3483fa'">Agregar al carrito</button>
+                <div style="margin-top:20px;">
+                    ${botonAccion}
+                </div>
             `;
             
             document.getElementById('modalVistaPrevia').style.display = 'flex';
         }
 
-        // Iniciar en la pestaña productos por defecto
         mostrarCatalogo('productos');
-    </script>
+    </script>  
 </body>
 </html>

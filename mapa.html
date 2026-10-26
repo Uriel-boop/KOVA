@@ -358,6 +358,35 @@
             .main-navigation { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
             .nav-btn { width: 100%; }
         }
+
+        /* Contenedor principal de la navegación en fila */
+.main-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+/* Estilo base de los botones inactivos */
+.nav-btn {
+    flex: 1;
+    text-align: center;
+    padding: 10px 16px;
+    background-color: #DFF0F4;
+    color: #4A5568;
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+/* Estilo resaltado para la página activa actual */
+.nav-btn.active {
+    background-color: #F25487 !important;
+    color: white !important;
+}
     </style>
 </head>
 <body>
