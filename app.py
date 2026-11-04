@@ -107,10 +107,10 @@ GOOGLE_CLIENT_ID = (
 # CONFIGURACIÓN DE BASE DE DATOS
 # -------------------------------------------------------------------
 DB_CONFIG = {
-    "host": "localhost",
-    "user": "root",
-    "password": "",
-    "database": "kova_db",
+    "host": "mysql-database-vstimrr4fe7v5md5ccwr51ut",
+    "user": "mysql",
+    "password": "7aUAA1BQPPqSLnAlfmChcbBAeBdkTVc3hYTguEPHrmRAvdvZzty63VgjTjxD8Hna",
+    "database": "default",
     "charset": "utf8mb4",
 }
 
