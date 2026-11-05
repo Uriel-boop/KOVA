@@ -701,6 +701,18 @@ def verify_reset_code():
 def index():
     return render_template('index.html')
 
+@app.route('/usuarios')
+def kova_usuarios():
+    return render_template('kova_usuarios.html')
+
+@app.route('/vendedor')
+def vendedor_productos():
+    return render_template('vendedor_productos.html')
+
+@app.route('/prestador')
+def prestador_servicios():
+    return render_template('prestador_servicios.html')
+
 
 @app.route('/actualizar_historial', methods=['POST', 'OPTIONS'])
 def actualizar_historial():

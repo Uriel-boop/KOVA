@@ -779,11 +779,11 @@
 
                 // Redireccionar según el rol
                 if (tipoUsuario.includes('vendedor')) {
-                    window.location.href = 'vendedor_productos.html';
+                    window.location.href = '/vendedor';
                 } else if (tipoUsuario.includes('prestador')) {
-                    window.location.href = 'prestador_servicios.html';
+                    window.location.href = '/prestador';
                 } else {
-                    window.location.href = 'kova_usuarios.html';
+                    window.location.href = '/usuarios';
                 }
             } else {
                 alert('❌ ' + (data.message || 'Correo o contraseña incorrectos'));
@@ -833,9 +833,9 @@
                     // Redirigir según el rol seleccionado al registrarse
                     const tipoUsuario = dataLogin.tipo_usuario || payload.tipo_usuario;
                     if (tipoUsuario === 'Vendedor de productos') {
-                        window.location.href = 'vendedor_productos.html';
+                        window.location.href = '/vendedor';
                     } else {
-                        window.location.href = 'kova_usuarios.html';
+                        window.location.href = '/usuarios';
                     }
                 } else {
                     alert(dataLogin.message || 'Registro completado, pero ocurrió un problema al iniciar sesión automáticamente.');
